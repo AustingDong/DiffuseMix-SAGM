@@ -13,7 +13,11 @@ class Utils:
     def combine(org_img, gen_img):
         org_img_arr = np.array(org_img)
         gen_img_arr = np.array(gen_img)
+
+        ones_matrix = np.ones(shape=org_img_arr.shape)
+
         print(org_img_arr.shape)
         print(gen_img_arr.shape)
+        print(ones_matrix.shape)
 
 
