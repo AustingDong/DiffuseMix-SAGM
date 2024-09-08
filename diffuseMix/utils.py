@@ -1,15 +1,9 @@
-from diffuseMix.diffusion import Diffusion
-import numpy as np
-import matplotlib.pyplot as plt
+import os
 import random
+import numpy as np
+from PIL import Image
 
 class Utils:
-    
-    @staticmethod
-    def generate(prompt, image, model_id="nitrosocke/Ghibli-Diffusion"):
-        diffuser = Diffusion(model_id=model_id, seed=1024)
-        gen_img = diffuser.generate(prompt=prompt, image=image)
-        return gen_img
     
     @staticmethod
     def combine(org_img, gen_img):
