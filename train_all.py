@@ -18,6 +18,8 @@ from domainbed.lib.writers import get_writer
 from domainbed.lib.logger import Logger
 from domainbed.trainer import train
 
+from domainbed.structs.args import Args
+
 
 def main():
     parser = argparse.ArgumentParser(description="Domain generalization")
@@ -46,7 +48,7 @@ def main():
     parser.add_argument("--holdout_fraction", type=float, default=0.2)
     parser.add_argument("--model_save", default=None, type=int, help="Model save start step")
     parser.add_argument("--deterministic", action="store_true")
-    parser.add_argument("--tb_freq", default=10)
+    parser.add_argument("--tb_freq", type=int, default=10)
     parser.add_argument("--debug", action="store_true", help="Run w/ debug mode")
     parser.add_argument("--show", action="store_true", help="Show args and hparams w/o run")
     parser.add_argument(
@@ -56,6 +58,7 @@ def main():
     )
     parser.add_argument("--prebuild_loader", action="store_true", help="Pre-build eval loaders")
     args, left_argv = parser.parse_known_args()
+    args = Args(**vars(args))
 
     # setup hparams
     hparams = hparams_registry.default_hparams(args.algorithm, args.dataset)

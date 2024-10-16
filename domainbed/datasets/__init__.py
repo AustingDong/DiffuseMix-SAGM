@@ -1,47 +1,64 @@
+from typing import List
 import torch
 import numpy as np
 
+from domainbed.algorithms.algorithms import Algorithm
 from domainbed.datasets import datasets
 from domainbed.lib import misc
 from domainbed.datasets import transforms as DBT
+from domainbed.structs.args import Args
 
 
-def set_transfroms(dset, data_type, hparams, algorithm_class=None):
+class _SplitDataset(torch.utils.data.Dataset):
+    """Used by split_dataset"""
+
+    def __init__(self, underlying_dataset: torch.utils.data.Dataset, keys: List[int]):
+        super(_SplitDataset, self).__init__()
+        self.underlying_dataset = underlying_dataset
+        self.keys = keys
+        self.transforms = {}
+
+        self.direct_return = isinstance(underlying_dataset, _SplitDataset)
+
+    def __getitem__(self, key):
+        if self.direct_return:
+            return self.underlying_dataset[self.keys[key]]
+
+        x, y = self.underlying_dataset[self.keys[key]]
+        ret = {"y": y}
+
+        for key, transform in self.transforms.items():
+            ret[key] = transform(x)
+
+        return ret
+
+    def __len__(self):
+        return len(self.keys)
+
+
+def split_dataset(dataset, n, seed=0) -> tuple[_SplitDataset, _SplitDataset]:
     """
-    Args:
-        data_type: ['train', 'valid', 'test', 'mnist']
+    Return a pair of datasets corresponding to a random split of the given
+    dataset, with n datapoints in the first dataset and the rest in the last,
+    using the given random seed
     """
-    assert hparams["data_augmentation"]
-
-    additional_data = False
-    if data_type == "train":
-        dset.transforms = {"x": DBT.aug}
-        additional_data = True
-    elif data_type == "valid":
-        if hparams["val_augment"] is False:
-            dset.transforms = {"x": DBT.basic}
-        else:
-            # Originally, DomainBed use same training augmentation policy to validation.
-            # We turn off the augmentation for validation as default,
-            # but left the option to reproducibility.
-            dset.transforms = {"x": DBT.aug}
-    elif data_type == "test":
-        dset.transforms = {"x": DBT.basic}
-    elif data_type == "mnist":
-        # No augmentation for mnist
-        dset.transforms = {"x": lambda x: x}
-    else:
-        raise ValueError(data_type)
-
-    if additional_data and algorithm_class is not None:
-        for key, transform in algorithm_class.transforms.items():
-            dset.transforms[key] = transform
+    assert n <= len(dataset)
+    keys = list(range(len(dataset)))
+    np.random.RandomState(seed).shuffle(keys)
+    keys_1 = keys[:n]
+    keys_2 = keys[n:]
+    return _SplitDataset(dataset, keys_1), _SplitDataset(dataset, keys_2)
 
 
-def get_dataset(test_envs, args, hparams, algorithm_class=None):
+def get_dataset(
+    test_envs: List[int],
+    args: Args,
+    hparams: dict,
+    algorithm_class: Algorithm | None = None
+) -> tuple[datasets.MultipleEnvironmentImageFolder, list[tuple[_SplitDataset, np.ndarray]], list[tuple[_SplitDataset, np.ndarray]]]:
     """Get dataset and split."""
     is_mnist = "MNIST" in args.dataset
-    dataset = vars(datasets)[args.dataset](args.data_dir)
+    dataset: datasets.MultipleEnvironmentImageFolder = vars(datasets)[args.dataset](args.data_dir)
     #  if not isinstance(dataset, MultipleEnvironmentImageFolder):
     #      raise ValueError("SMALL image datasets are not implemented (corrupted), for transform.")
 
@@ -81,42 +98,33 @@ def get_dataset(test_envs, args, hparams, algorithm_class=None):
     return dataset, in_splits, out_splits
 
 
-class _SplitDataset(torch.utils.data.Dataset):
-    """Used by split_dataset"""
-
-    def __init__(self, underlying_dataset, keys):
-        super(_SplitDataset, self).__init__()
-        self.underlying_dataset = underlying_dataset
-        self.keys = keys
-        self.transforms = {}
-
-        self.direct_return = isinstance(underlying_dataset, _SplitDataset)
-
-    def __getitem__(self, key):
-        if self.direct_return:
-            return self.underlying_dataset[self.keys[key]]
-
-        x, y = self.underlying_dataset[self.keys[key]]
-        ret = {"y": y}
-
-        for key, transform in self.transforms.items():
-            ret[key] = transform(x)
-
-        return ret
-
-    def __len__(self):
-        return len(self.keys)
-
-
-def split_dataset(dataset, n, seed=0):
+def set_transfroms(dset: _SplitDataset, data_type: str, hparams: dict, algorithm_class: Algorithm | None = None):
     """
-    Return a pair of datasets corresponding to a random split of the given
-    dataset, with n datapoints in the first dataset and the rest in the last,
-    using the given random seed
+    Args:
+        data_type: ['train', 'valid', 'test', 'mnist']
     """
-    assert n <= len(dataset)
-    keys = list(range(len(dataset)))
-    np.random.RandomState(seed).shuffle(keys)
-    keys_1 = keys[:n]
-    keys_2 = keys[n:]
-    return _SplitDataset(dataset, keys_1), _SplitDataset(dataset, keys_2)
+    assert hparams["data_augmentation"]
+
+    additional_data = False
+    if data_type == "train":
+        dset.transforms = {"x": DBT.aug}
+        additional_data = True
+    elif data_type == "valid":
+        if hparams["val_augment"] is False:
+            dset.transforms = {"x": DBT.basic}
+        else:
+            # Originally, DomainBed use same training augmentation policy to validation.
+            # We turn off the augmentation for validation as default,
+            # but left the option to reproducibility.
+            dset.transforms = {"x": DBT.aug}
+    elif data_type == "test":
+        dset.transforms = {"x": DBT.basic}
+    elif data_type == "mnist":
+        # No augmentation for mnist
+        dset.transforms = {"x": lambda x: x}
+    else:
+        raise ValueError(data_type)
+
+    if additional_data and algorithm_class is not None:
+        for key, transform in algorithm_class.transforms.items():
+            dset.transforms[key] = transform

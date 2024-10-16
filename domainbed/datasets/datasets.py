@@ -7,6 +7,7 @@ from torchvision import transforms as T
 from torch.utils.data import TensorDataset
 from torchvision.datasets import MNIST, ImageFolder
 from torchvision.transforms.functional import rotate
+import random
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -249,3 +250,93 @@ class TerraIncognita(MultipleEnvironmentImageFolder):
     def __init__(self, root):
         self.dir = os.path.join(root, "terra_incognita/")
         super().__init__(self.dir)
+
+
+class GeneratedDomainDataset(MultipleDomainDataset):
+    """
+    A dataset class that loads images from the 'original_resized' folder and randomly selects a corresponding
+    'generated' image with the same ID from the 'generated' folder for each sample.
+    """
+    def __init__(self, root):
+        super().__init__()
+        # Setting up the environments based on the 'original_resized' subfolder
+        self.original_subfolder = "original_resized"
+        self.generated_subfolder = "generated"
+
+        # Get environment names (styles) from the dataset directory
+        environments = [f.name for f in os.scandir(root) if f.is_dir()]
+        environments = sorted(environments)
+        self.environments = environments
+
+        self.datasets = []
+        self.generated_images = {}
+
+        for environment in environments:
+            original_path = os.path.join(root, environment, self.original_subfolder)
+            generated_path = os.path.join(root, environment, self.generated_subfolder)
+
+            # ImageFolder for original images
+            env_original_dataset = ImageFolder(original_path)
+            self.datasets.append(env_original_dataset)
+
+            # Load the corresponding generated images into memory (by mapping the original image ID)
+            self.generated_images[environment] = self._load_generated_images(generated_path, env_original_dataset)
+
+        self.input_shape = (3, 224, 224)  # Assuming all images have this shape
+        self.num_classes = len(self.datasets[-1].classes)
+
+    def _load_generated_images(self, generated_path, original_dataset):
+        """
+        Helper function to load generated images from the generated subfolder and map them
+        to their corresponding original image ID.
+        """
+        generated_images_map = {}
+
+        # Traverse the original dataset to find matching generated images
+        for class_index, class_name in enumerate(original_dataset.classes):
+            class_folder = os.path.join(generated_path, class_name)
+            if os.path.exists(class_folder):
+                for image_file in os.listdir(class_folder):
+                    if image_file.endswith(".jpg") or image_file.endswith(".png"):
+                        # Split image filename to extract the base image ID
+                        base_id = "_".join(image_file.split("_")[:2])
+                        if base_id not in generated_images_map:
+                            generated_images_map[base_id] = []
+                        # Add the full path of the generated image
+                        generated_images_map[base_id].append(os.path.join(class_folder, image_file))
+
+        return generated_images_map
+
+    def __getitem__(self, index):
+        """
+        For each image in the original dataset, this function randomly picks one corresponding
+        generated image and returns both.
+        """
+        env_dataset = self.datasets[index % len(self.datasets)]  # Select the environment dataset
+        original_img, label = env_dataset[index // len(self.datasets)]  # Get the original image and its label
+
+        # Find corresponding generated image
+        original_img_name = os.path.basename(env_dataset.samples[index // len(self.datasets)][0])
+        base_id = original_img_name.split(".")[0]  # Get the base ID of the original image
+
+        environment = self.environments[index % len(self.environments)]
+        if base_id in self.generated_images[environment]:
+            generated_img_path = random.choice(self.generated_images[environment][base_id])
+            generated_img = Image.open(generated_img_path).convert("RGB")
+        else:
+            # If no matching generated image is found, return the original image twice (fallback)
+            generated_img = original_img
+
+        # Apply any necessary transformations to both images (resize, normalization, etc.)
+        transform = env_dataset.transform if env_dataset.transform else lambda x: x
+        original_img = transform(original_img)
+        generated_img = transform(generated_img)
+
+        return (original_img, generated_img), label
+
+    def __len__(self):
+        """
+        Return the total number of images in the original dataset.
+        """
+        return sum(len(env) for env in self.datasets)
+
