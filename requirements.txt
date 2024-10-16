@@ -7,5 +7,5 @@ sconf==0.2.3
 #torchvision==0.8.1+cu92
 tqdm==4.51.0
 # tensorboard==2.3.0
-Pillow==8.1.0
+# Pillow==8.1.0
 # tensorboardX==2.1
