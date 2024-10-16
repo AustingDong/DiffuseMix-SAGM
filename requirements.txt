@@ -1,5 +1,5 @@
 prettytable
-# numpy==1.19.4
+numpy==1.19.4
 #torch==1.7.0+cu92
 gdown
 imageio
