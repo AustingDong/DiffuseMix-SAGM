@@ -19,7 +19,10 @@ def accuracy_from_loader(algorithm, loader, weights, debug=False):
     algorithm.eval()
 
     for i, batch in enumerate(loader):
-        x = batch["x"].to(device)
+        if isinstance(batch["x"], tuple) or isinstance(batch["x"], list):
+            x = batch["x"][0].to(device)
+        else:
+            x = batch["x"].to(device)
         y = batch["y"].to(device)
 
         with torch.no_grad():

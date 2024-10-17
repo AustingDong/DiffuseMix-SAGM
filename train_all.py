@@ -58,7 +58,7 @@ def main():
     )
     parser.add_argument("--prebuild_loader", action="store_true", help="Pre-build eval loaders")
     args, left_argv = parser.parse_known_args()
-    args = Args(**vars(args))
+    args: Args = args
 
     # setup hparams
     hparams = hparams_registry.default_hparams(args.algorithm, args.dataset)
@@ -102,7 +102,7 @@ def main():
     logger.nofmt("\tPIL: {}".format(PIL.__version__))
 
     # Different to DomainBed, we support CUDA only.
-    assert torch.cuda.is_available(), "CUDA is not available"
+    # assert torch.cuda.is_available(), "CUDA is not available"
 
     logger.nofmt("Args:")
     for k, v in sorted(vars(args).items()):

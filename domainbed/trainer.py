@@ -174,7 +174,11 @@ def train(test_envs: List[int], args: Args, hparams, n_steps, checkpoint_freq, l
 
         # to device
         batches = {
-            key: [tensor.to(device) for tensor in tensorlist] for key, tensorlist in batches.items()
+            key: [
+                tensor.to(device) if isinstance(tensor, torch.Tensor) else [x.to(device) for x in tensor]
+                for tensor in tensorlist
+            ] 
+            for key, tensorlist in batches.items()
         }
 
 

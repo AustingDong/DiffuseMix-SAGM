@@ -261,6 +261,8 @@ class OriginalGeneratedDataset(Dataset):
         self.generated_root = generated_root
         
         # (class_index, image_id) -> [generated_image_path]
+        # image id is defined as the unique filename of the original image
+        # eg the ID for pic_001.jpg is pic_001
         self.generated_images = {}
 
         # Iterate through the generated folder to build the mapping
@@ -270,12 +272,9 @@ class OriginalGeneratedDataset(Dataset):
             class_path = os.path.join(generated_root, class_name)
             for img_name in os.listdir(class_path):
                 if img_name.endswith('.jpg'):
-                    # Extract image ID (e.g., 001) from pic_001_<unique_string>.jpg
-                    match = re.search(r'\d{3}', img_name)
-                    if match:
-                        image_id = match.group(0)
-                    else:
-                        raise ValueError(f"Master ID not found in image name: {img_name}")
+                    # Extract image ID from the generated image filename
+                    # use the fact that it's always <image_id>.<style_info>.jpg
+                    image_id = img_name.split('.')[0]
                     
                     key = (class_idx, image_id)
                     
@@ -294,8 +293,8 @@ class OriginalGeneratedDataset(Dataset):
         # Get the image path from the original dataset
         original_image_path, _ = self.original_dataset.samples[idx]
         
-        # Extract the master ID from the filename (e.g., 001 from pic_001.jpg)
-        image_id = os.path.basename(original_image_path).split('.')[0].split('_')[-1]
+        # Extract the master ID from the filename (e.g., pic_001 from pic_001.jpg)
+        image_id = os.path.basename(original_image_path).split('.')[0]
         key = (label, image_id)
 
         # Randomly select a corresponding generated image based on the master ID
@@ -321,6 +320,9 @@ class MultipleEnvironmentImageFolderWithGenerated(MultipleDomainDataset):
             generated_root = os.path.join(root, environment, 'generated')
         
             self.datasets.append(OriginalGeneratedDataset(original_root, generated_root))
+        
+        self.input_shape = (3, 224, 224)
+        self.num_classes = len(self.datasets[-1].original_dataset.classes)
 
     def __len__(self):
         # Return the number of environments

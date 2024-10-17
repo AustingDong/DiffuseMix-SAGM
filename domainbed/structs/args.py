@@ -10,9 +10,9 @@ class Args(BaseModel):
     algorithm: str
     trial_seed: int
     seed: int
-    steps: int
-    checkpoint_freq: int
-    test_envs: List[List[int]]
+    steps: int | None
+    checkpoint_freq: int | None
+    test_envs: List[List[int]] | None
     holdout_fraction: float
     model_save: int | None
     deterministic: bool
@@ -27,3 +27,6 @@ class Args(BaseModel):
     out_dir: Path
 
     real_test_envs: List[int]
+
+    class Config:
+        protected_namespaces = ()

@@ -17,10 +17,8 @@ import torch.nn as nn
 from itertools import cycle
 import numpy as np
 
-from domainbed.datasets import _SplitDataset
 
-
-def make_weights_for_balanced_classes(dataset: _SplitDataset) -> torch.Tensor:
+def make_weights_for_balanced_classes(dataset) -> torch.Tensor:
     counts = Counter()
     classes = []
     for _, y in dataset:
