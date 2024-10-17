@@ -190,14 +190,14 @@ class SAGM_DG_DiffuseMix(Algorithm):
                                alpha=self.hparams["alpha"], rho_scheduler=self.rho_scheduler, adaptive=False)
 
     def update(self, x, y, **kwargs):
-        # TODO: change to accept 2 inputs and 1 output
-        all_x = torch.cat(x)
+        original_x = x[:, 0]  # Original image (first image in the pair)
+        transformed_x = x[:, 1]  # Generated image (second image in the pair)
         all_y = torch.cat(y)
 
         def loss_fn(predictions, targets):
             return F.cross_entropy(predictions, targets)
 
-        self.SAGM_optimizer.set_closure(loss_fn, all_x, all_x, all_y)
+        self.SAGM_optimizer.set_closure(loss_fn, original_x, transformed_x, all_y)
         predictions, loss = self.SAGM_optimizer.step()
         self.lr_scheduler.step()
         self.SAGM_optimizer.update_rho_t()

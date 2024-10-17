@@ -1,6 +1,7 @@
-from typing import List
-import torch
+from typing import List, Dict
 import numpy as np
+from torch.utils.data import Dataset
+from torchvision.transforms import Compose
 
 from domainbed.algorithms.algorithms import Algorithm
 from domainbed.datasets import datasets
@@ -9,14 +10,14 @@ from domainbed.datasets import transforms as DBT
 from domainbed.structs.args import Args
 
 
-class _SplitDataset(torch.utils.data.Dataset):
+class _SplitDataset(Dataset):
     """Used by split_dataset"""
 
-    def __init__(self, underlying_dataset: torch.utils.data.Dataset, keys: List[int]):
+    def __init__(self, underlying_dataset: Dataset, keys: List[int]):
         super(_SplitDataset, self).__init__()
         self.underlying_dataset = underlying_dataset
         self.keys = keys
-        self.transforms = {}
+        self.transforms: Dict[str, Compose] = {}
 
         self.direct_return = isinstance(underlying_dataset, _SplitDataset)
 
@@ -28,7 +29,11 @@ class _SplitDataset(torch.utils.data.Dataset):
         ret = {"y": y}
 
         for key, transform in self.transforms.items():
-            ret[key] = transform(x)
+            # Handle MultipleEnvironmentImageFolderWithGenerated
+            if isinstance(x, tuple):
+                ret[key] = tuple(transform(xx) for xx in x)
+            else: # Base case
+                ret[key] = transform(x)
 
         return ret
 
@@ -84,8 +89,8 @@ def get_dataset(
             in_type = "mnist"
             out_type = "mnist"
 
-        set_transfroms(in_, in_type, hparams, algorithm_class)
-        set_transfroms(out, out_type, hparams, algorithm_class)
+        set_transforms(in_, in_type, hparams, algorithm_class)
+        set_transforms(out, out_type, hparams, algorithm_class)
 
         if hparams["class_balanced"]:
             in_weights = misc.make_weights_for_balanced_classes(in_)
@@ -98,7 +103,7 @@ def get_dataset(
     return dataset, in_splits, out_splits
 
 
-def set_transfroms(dset: _SplitDataset, data_type: str, hparams: dict, algorithm_class: Algorithm | None = None):
+def set_transforms(dset: _SplitDataset, data_type: str, hparams: dict, algorithm_class: Algorithm | None = None):
     """
     Args:
         data_type: ['train', 'valid', 'test', 'mnist']
