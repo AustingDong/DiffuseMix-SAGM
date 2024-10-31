@@ -112,6 +112,48 @@ class ERM(Algorithm):
     def predict(self, x):
         return self.network(x)
 
+
+class ERM_DiffuseMix(Algorithm):
+    """
+    Empirical Risk Minimization (ERM) with DiffuseMix
+    """
+
+    def __init__(self, input_shape, num_classes, num_domains, hparams):
+        super(ERM, self).__init__(input_shape, num_classes, num_domains, hparams)
+        self.featurizer = networks.Featurizer(input_shape, self.hparams)
+        self.classifier = nn.Linear(self.featurizer.n_outputs, num_classes)
+        self.network = nn.Sequential(self.featurizer, self.classifier)
+        self.optimizer = get_optimizer(
+            hparams["optimizer"],
+            self.network.parameters(),
+            lr=self.hparams["lr"],
+            weight_decay=self.hparams["weight_decay"],
+        )
+
+    def update(self, x, y, **kwargs):
+
+        original_x = [x[i][0] for i in range(len(x))]
+        transformed_x = [x[i][1] for i in range(len(x))]
+        all_original_x = torch.cat(original_x)
+        all_transformed_x = torch.cat(transformed_x)
+        all_y = torch.cat(y)
+
+        loss_original = F.cross_entropy(self.predict(all_original_x), all_y)
+        loss_transformed = F.cross_entropy(self.predict(all_transformed_x), all_y)
+        loss = torch.add(loss_original, loss_transformed)
+
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
+        return {"loss": loss.item()}
+
+    def predict(self, x):
+        return self.network(x)
+
+
+
+
 class SAGM_DG(Algorithm):
     """
     Empirical Risk Minimization (ERM)
