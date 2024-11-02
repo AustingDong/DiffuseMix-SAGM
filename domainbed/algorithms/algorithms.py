@@ -266,7 +266,9 @@ class SAGM_DG_DiffuseMix(Algorithm):
         return {"loss": loss.item()}
 
     def predict(self, x):
-        return self.network(x)
+        original_x = [x[i][0] for i in range(len(x))]
+        all_original_x = torch.cat(original_x)
+        return self.network(all_original_x)
 
 
 
