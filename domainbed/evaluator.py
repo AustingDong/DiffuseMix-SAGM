@@ -22,18 +22,27 @@ def accuracy_from_loader(algorithm, loader, weights, debug=False):
     algorithm.eval()
 
     for i, batch in enumerate(loader):
+
+        # get batch
+        visualize_batch = np.array(batch["x"])
+        print(visualize_batch.shape) # (2, 128, 3, 224, 224)
+        # save 2 images
+        img_1_array = visualize_batch[0, 0]  # Shape will be (3, 224, 224)
+        img_2_array = visualize_batch[1, 0]  # Shape will be (3, 224, 224)
+
+        # Transpose to (224, 224, 3) for saving
+        img_1_array = np.transpose(img_1_array, (1, 2, 0))
+        img_2_array = np.transpose(img_2_array, (1, 2, 0))
+
+        # Convert to PIL image and save
+        img_1 = Image.fromarray(img_1_array.astype(np.uint8))
+        img_2 = Image.fromarray(img_2_array.astype(np.uint8))
+        
+        img_1.save(f"test_imgs1/img1{i}.png")
+        img_2.save(f"test_imgs2/img2{i}.png")
+
+
         if isinstance(batch["x"], tuple) or isinstance(batch["x"], list):
-            # get batch
-            visualize_batch = np.array(batch["x"])
-            print(visualize_batch.shape) # (2, 128, 3, 224, 224)
-            # save 2 images
-            img_1 = Image.fromarray(visualize_batch[0][0])
-            img_2 = Image.fromarray(visualize_batch[1][0])
-
-            img_1.save("img1.png")
-            img_2.save("img2.png")
-            
-
             x = batch["x"][0].to(device)
         else:
             x = batch["x"].to(device)
@@ -70,6 +79,7 @@ def accuracy_from_loader(algorithm, loader, weights, debug=False):
 
 def accuracy(algorithm, loader_kwargs, weights, **kwargs):
     if isinstance(loader_kwargs, dict):
+        print("loader_kwargs:", loader_kwargs)
         loader = FastDataLoader(**loader_kwargs)
     elif isinstance(loader_kwargs, FastDataLoader):
         loader = loader_kwargs

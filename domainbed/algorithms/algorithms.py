@@ -8,6 +8,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.autograd as autograd
 import numpy as np
+from PIL import Image
+import matplotlib.pyplot as plt
 
 #  import higher
 
@@ -130,10 +132,60 @@ class ERM_DiffuseMix(Algorithm):
             weight_decay=self.hparams["weight_decay"],
         )
 
+    def print_structure(self, data, level=0):
+        if isinstance(data, list):
+            print("  " * level + f"Level {level}: List with {len(data)} elements")
+            if len(data) > 0:
+                self.print_structure(data[0], level + 1)
+        elif isinstance(data, torch.Tensor):
+            print("  " * level + f"Level {level}: Tensor with shape {data.shape}")
+        else:
+            print("  " * level + f"Level {level}: {type(data)}")
+
+    def visualize_images(self, x):
+        # Get the size of `x`
+        self.print_structure(x)
+        for i, batch in enumerate(x):
+            # Each batch contains [original_images, transformed_images]
+            original_images = batch[0]  # Tensor with shape [32, 3, 224, 224]
+            transformed_images = batch[1]  # Tensor with shape [32, 3, 224, 224]
+
+            # Select the first image from both original and transformed
+            original_image = original_images[0]  # Shape [3, 224, 224]
+            transformed_image = transformed_images[0]  # Shape [3, 224, 224]
+
+            # Convert to numpy arrays for visualization, with channels last
+            original_image = original_image.permute(1, 2, 0).cpu().numpy()
+            transformed_image = transformed_image.permute(1, 2, 0).cpu().numpy()
+
+            # Ensure images are in the range [0, 255]
+            original_image = (original_image * 255).clip(0, 255).astype(np.uint8)
+            transformed_image = (transformed_image * 255).clip(0, 255).astype(np.uint8)
+
+            # Plot the original and transformed images side-by-side
+            fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+            axs[0].imshow(original_image)
+            axs[0].set_title(f"Original Image - Batch {i + 1}")
+            axs[0].axis("off")
+
+            axs[1].imshow(transformed_image)
+            axs[1].set_title(f"Transformed Image - Batch {i + 1}")
+            axs[1].axis("off")
+
+            plt.show()
+
     def update(self, x, y, **kwargs):
+        # (3, 2, 32, 3, 224, 224)
+        '''
+            Level 0: List with 3 elements
+            Level 1: List with 2 elements
+            Level 2: Tensor with shape torch.Size([32, 3, 224, 224])
+        '''
+        self.visualize_images(x)
 
         original_x = [x[i][0] for i in range(len(x))]
         transformed_x = [x[i][1] for i in range(len(x))]
+
         all_original_x = torch.cat(original_x)
         all_transformed_x = torch.cat(transformed_x)
         all_y = torch.cat(y)
