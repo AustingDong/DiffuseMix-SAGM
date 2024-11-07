@@ -94,9 +94,6 @@ def train(test_envs: List[int], args: Args, hparams, n_steps, checkpoint_freq, l
     logger.info(f"steps-per-epoch for each domain: {prt_steps} -> min = {steps_per_epoch:.2f}")
 
 
-    # check shape of in_splits, out_splits, test_splits
-    print(in_splits.shape)
-    
     # setup loaders
     train_loaders = [
         InfiniteDataLoader(

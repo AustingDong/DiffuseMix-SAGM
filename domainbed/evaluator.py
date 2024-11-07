@@ -20,6 +20,9 @@ def accuracy_from_loader(algorithm, loader, weights, debug=False):
 
     for i, batch in enumerate(loader):
         if isinstance(batch["x"], tuple) or isinstance(batch["x"], list):
+            # get batch
+            print(batch["x"].shape)
+
             x = batch["x"][0].to(device)
         else:
             x = batch["x"].to(device)
