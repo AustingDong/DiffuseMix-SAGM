@@ -4,6 +4,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from domainbed.lib.fast_data_loader import FastDataLoader
 
+import numpy as np
+from PIL import Image
+
 if torch.cuda.is_available():
     device = "cuda"
 else:
@@ -21,7 +24,15 @@ def accuracy_from_loader(algorithm, loader, weights, debug=False):
     for i, batch in enumerate(loader):
         if isinstance(batch["x"], tuple) or isinstance(batch["x"], list):
             # get batch
-            print(batch["x"].shape)
+            visualize_batch = np.array(batch["x"])
+            print(visualize_batch.shape) # (2, 128, 3, 224, 224)
+            # save 2 images
+            img_1 = Image.fromarray(visualize_batch[0][0])
+            img_2 = Image.fromarray(visualize_batch[1][0])
+
+            img_1.save("img1.png")
+            img_2.save("img2.png")
+            
 
             x = batch["x"][0].to(device)
         else:
