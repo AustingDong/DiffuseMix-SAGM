@@ -3,6 +3,7 @@ import json
 import time
 import copy
 from pathlib import Path
+from typing import List
 
 import numpy as np
 import torch
@@ -16,6 +17,7 @@ from domainbed.lib import swa_utils
 from domainbed.lib.query import Q
 from domainbed.lib.fast_data_loader import InfiniteDataLoader, FastDataLoader
 from domainbed import swad as swad_module
+from domainbed.structs.args import Args
 
 if torch.cuda.is_available():
     device = "cuda"
@@ -29,7 +31,7 @@ def json_handler(v):
     raise TypeError(f"`{type(v)}` is not JSON Serializable")
 
 
-def train(test_envs, args, hparams, n_steps, checkpoint_freq, logger, writer, target_env=None):
+def train(test_envs: List[int], args: Args, hparams, n_steps, checkpoint_freq, logger, writer, target_env=None):
     logger.info("")
 
     #######################################################
@@ -74,7 +76,7 @@ def train(test_envs, args, hparams, n_steps, checkpoint_freq, logger, writer, ta
     n_envs = len(dataset)
     train_envs = sorted(set(range(n_envs)) - set(test_envs))
     iterator = misc.SplitIterator(test_envs)
-    batch_sizes = np.full([n_envs], hparams["batch_size"], dtype=np.int)
+    batch_sizes = np.full([n_envs], hparams["batch_size"], dtype=int)
 
     batch_sizes[test_envs] = 0
     batch_sizes = batch_sizes.tolist()
@@ -172,7 +174,11 @@ def train(test_envs, args, hparams, n_steps, checkpoint_freq, logger, writer, ta
 
         # to device
         batches = {
-            key: [tensor.to(device) for tensor in tensorlist] for key, tensorlist in batches.items()
+            key: [
+                tensor.to(device) if isinstance(tensor, torch.Tensor) else [x.to(device) for x in tensor]
+                for tensor in tensorlist
+            ] 
+            for key, tensorlist in batches.items()
         }
 
 

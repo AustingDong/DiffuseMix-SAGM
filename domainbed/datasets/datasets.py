@@ -1,12 +1,15 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 import os
+import re
+from typing import List
 import torch
 from PIL import Image, ImageFile
 from torchvision import transforms as T
-from torch.utils.data import TensorDataset
+from torch.utils.data import TensorDataset, Dataset
 from torchvision.datasets import MNIST, ImageFolder
 from torchvision.transforms.functional import rotate
+import random
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -220,6 +223,7 @@ class PACS(MultipleEnvironmentImageFolder):
     def __init__(self, root):
         self.dir = os.path.join(root, "PACS/")
         super().__init__(self.dir)
+        
 
 
 class DomainNet(MultipleEnvironmentImageFolder):
@@ -247,4 +251,92 @@ class TerraIncognita(MultipleEnvironmentImageFolder):
 
     def __init__(self, root):
         self.dir = os.path.join(root, "terra_incognita/")
+        super().__init__(self.dir)
+
+
+class OriginalGeneratedDataset(Dataset):
+    def __init__(self, original_root, generated_root):
+        # Load the datasets using ImageFolder
+        self.original_dataset = ImageFolder(root=original_root)
+        self.generated_root = generated_root
+        
+        # (class_index, image_id) -> [generated_image_path]
+        # image id is defined as the unique filename of the original image
+        # eg the ID for pic_001.jpg is pic_001
+        self.generated_images = {}
+
+        # Iterate through the generated folder to build the mapping
+        folder_names = [f.name for f in os.scandir(generated_root) if f.is_dir()]
+        folder_names = sorted(folder_names) # ensure consistent order
+        for class_idx, class_name in enumerate(folder_names):
+            class_path = os.path.join(generated_root, class_name)
+            for img_name in os.listdir(class_path):
+                if img_name.endswith('.jpg'):
+                    # Extract image ID from the generated image filename
+                    # use the fact that it's always <image_id>.<style_info>.jpg
+                    image_id = img_name.split('.')[0]
+                    
+                    key = (class_idx, image_id)
+                    
+                    if image_id not in self.generated_images:
+                        self.generated_images[key] = []
+                    self.generated_images[key].append(os.path.join(class_path, img_name))
+
+    def __len__(self):
+        # Return the number of original images
+        return len(self.original_dataset)
+
+    def __getitem__(self, idx):
+        # Fetch the original image and its label using ImageFolder
+        original_image, label = self.original_dataset[idx]
+        
+        # Get the image path from the original dataset
+        original_image_path, _ = self.original_dataset.samples[idx]
+        
+        # Extract the master ID from the filename (e.g., pic_001 from pic_001.jpg)
+        image_id = os.path.basename(original_image_path).split('.')[0]
+        key = (label, image_id)
+
+        # Randomly select a corresponding generated image based on the master ID
+        generated_image_path = random.choice(self.generated_images[key])
+        
+        # Load the generated image using ImageFolder's transform pipeline
+        generated_image = self.original_dataset.loader(generated_image_path)
+
+        # Return the tuple of (original_image, generated_image) and the label
+        return (original_image, generated_image), label
+
+
+class MultipleEnvironmentImageFolderWithGenerated(MultipleDomainDataset):
+    def __init__(self, root):
+        super().__init__()
+        environments = [f.name for f in os.scandir(root) if f.is_dir()]
+        environments = sorted(environments)
+        self.environments = environments
+
+        self.datasets: List[OriginalGeneratedDataset] = []
+        for environment in environments:
+            original_root = os.path.join(root, environment, 'original_resized')
+            generated_root = os.path.join(root, environment, 'generated')
+        
+            self.datasets.append(OriginalGeneratedDataset(original_root, generated_root))
+        
+        self.input_shape = (3, 224, 224)
+        self.num_classes = len(self.datasets[-1].original_dataset.classes)
+
+    def __len__(self):
+        # Return the number of environments
+        return len(self.environments)
+
+    def __getitem__(self, idx):
+        # Fetch the dataset corresponding to the given environment
+        dataset = self.datasets[idx]
+        return dataset
+
+
+class PACS_Generated(MultipleEnvironmentImageFolderWithGenerated):
+    ENVIRONMENTS = ["A", "C", "P", "S"]
+
+    def __init__(self, root):
+        self.dir = os.path.join(root, "PACS_augmented/")
         super().__init__(self.dir)

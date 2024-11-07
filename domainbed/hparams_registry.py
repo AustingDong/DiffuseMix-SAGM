@@ -3,7 +3,7 @@
 import numpy as np
 
 
-def _hparams(algorithm, dataset, random_state):
+def _hparams(algorithm: str, dataset: str, random_state: np.random.RandomState):
     """
     Global registry of hyperparams. Each entry is a (default, random) tuple.
     New algorithms / networks / etc. should add entries here.
@@ -90,6 +90,9 @@ def _hparams(algorithm, dataset, random_state):
     elif algorithm == "SAGM_DG":
         hparams["rho"] = (0.05, random_state.choice([0.01, 0.02, 0.05, 0.1]))
         hparams["alpha"] = (0.001, random_state.choice([0.01, 0.02, 0.05, 0.1]))
+    elif algorithm == "SAGM_DG_DiffuseMix":
+        hparams["rho"] = (0.05, random_state.choice([0.01, 0.02, 0.05, 0.1]))
+        hparams["alpha"] = (0.001, random_state.choice([0.01, 0.02, 0.05, 0.1]))
 
     elif algorithm == "CutMix":
         hparams["beta"] = (1.0, 1.0)
@@ -99,11 +102,11 @@ def _hparams(algorithm, dataset, random_state):
     return hparams
 
 
-def default_hparams(algorithm, dataset):
+def default_hparams(algorithm: str, dataset: str) -> dict:
     dummy_random_state = np.random.RandomState(0)
     return {a: b for a, (b, c) in _hparams(algorithm, dataset, dummy_random_state).items()}
 
 
-def random_hparams(algorithm, dataset, seed):
+def random_hparams(algorithm: str, dataset: str, seed) -> dict:
     random_state = np.random.RandomState(seed)
     return {a: c for a, (b, c) in _hparams(algorithm, dataset, random_state).items()}

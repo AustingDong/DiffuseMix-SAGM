@@ -24,7 +24,7 @@ from domainbed.models.resnet_mixstyle2 import (
     resnet50_mixstyle2_L234_p0d5_a0d1,
 )
 
-from domainbed.sagm import SAGM, LinearScheduler
+from domainbed.sagm import SAGM, SAGM_DiffuseMix, LinearScheduler
 
 def to_minibatch(x, y):
     minibatches = list(zip(x, y))
@@ -112,6 +112,51 @@ class ERM(Algorithm):
     def predict(self, x):
         return self.network(x)
 
+
+class ERM_DiffuseMix(Algorithm):
+    """
+    Empirical Risk Minimization (ERM) with DiffuseMix
+    """
+
+    def __init__(self, input_shape, num_classes, num_domains, hparams):
+        super(ERM_DiffuseMix, self).__init__(input_shape, num_classes, num_domains, hparams)
+        self.featurizer = networks.Featurizer(input_shape, self.hparams)
+        self.classifier = nn.Linear(self.featurizer.n_outputs, num_classes)
+        self.network = nn.Sequential(self.featurizer, self.classifier)
+        self.optimizer = get_optimizer(
+            hparams["optimizer"],
+            self.network.parameters(),
+            lr=self.hparams["lr"],
+            weight_decay=self.hparams["weight_decay"],
+        )
+
+    def update(self, x, y, **kwargs):
+
+        original_x = [x[i][0] for i in range(len(x))]
+        transformed_x = [x[i][1] for i in range(len(x))]
+        all_original_x = torch.cat(original_x)
+        all_transformed_x = torch.cat(transformed_x)
+        all_y = torch.cat(y)
+
+        loss_original = F.cross_entropy(self.predict(all_original_x), all_y)
+        loss_transformed = F.cross_entropy(self.predict(all_transformed_x), all_y)
+        loss = torch.add(loss_original, loss_transformed)
+
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
+        return {"loss": loss.item()}
+
+    def predict(self, x):
+        return self.network(x)
+        # original_x = [x[i][0] for i in range(len(x))]
+        # all_original_x = torch.cat(original_x)
+        # return self.network(all_original_x)
+
+
+
+
 class SAGM_DG(Algorithm):
     """
     Empirical Risk Minimization (ERM)
@@ -158,6 +203,75 @@ class SAGM_DG(Algorithm):
 
     def predict(self, x):
         return self.network(x)
+
+
+class SAGM_DG_DiffuseMix(Algorithm):
+    """
+    Sharpness-Aware Gradient Matching (SAGM) with DiffuseMix
+    """
+
+    # def __init__(self, input_shape, num_classes, num_domains, hparams):
+    #     assert input_shape[1:3] == (224, 224), "Mixstyle support R18 and R50 only"
+    #     super().__init__(input_shape, num_classes, num_domains, hparams)
+    def __init__(self, input_shape, num_classes, num_domains, hparams):
+        super().__init__(input_shape, num_classes, num_domains, hparams)
+        self.featurizer = networks.Featurizer(input_shape, self.hparams)
+        self.classifier = nn.Linear(self.featurizer.n_outputs, num_classes)
+        self.network = nn.Sequential(self.featurizer, self.classifier)
+        self.optimizer = get_optimizer(
+            hparams["optimizer"],
+            self.network.parameters(),
+            lr=self.hparams["lr"],
+            weight_decay=self.hparams["weight_decay"],
+        )
+
+        self.lr_scheduler = LinearScheduler(T_max=5000, max_value=self.hparams["lr"],
+                                    min_value=self.hparams["lr"], optimizer=self.optimizer)
+
+        self.rho_scheduler = LinearScheduler(T_max=5000, max_value=0.05,
+                                         min_value=0.05)
+
+        self.SAGM_optimizer = SAGM_DiffuseMix(params=self.network.parameters(), base_optimizer=self.optimizer, model=self.network,
+                               alpha=self.hparams["alpha"], rho_scheduler=self.rho_scheduler, adaptive=False)
+
+    def update(self, x, y, **kwargs):
+        # print("XXX")
+        # print(x)
+        # print(type(x))
+        # print(len(x))
+        # print(type(x[0]))
+        # print(len(x[0]))
+        # print(x[0][0].shape)
+
+        # print("YYY")
+        # print(y)
+        # print(type(y))
+        # print(len(y))
+
+        original_x = [x[i][0] for i in range(len(x))]
+        transformed_x = [x[i][1] for i in range(len(x))]
+        all_original_x = torch.cat(original_x)
+        all_transformed_x = torch.cat(transformed_x)
+
+        # original_x = x[:, 0]  # Original image (first image in the pair)
+        # transformed_x = x[:, 1]  # Generated image (second image in the pair)
+        all_y = torch.cat(y)
+
+        def loss_fn(predictions, targets):
+            return F.cross_entropy(predictions, targets)
+
+        self.SAGM_optimizer.set_closure(loss_fn, all_original_x, all_transformed_x, all_y)
+        predictions, loss = self.SAGM_optimizer.step()
+        self.lr_scheduler.step()
+        self.SAGM_optimizer.update_rho_t()
+
+
+        return {"loss": loss.item()}
+
+    def predict(self, x):
+        original_x = [x[i][0] for i in range(len(x))]
+        all_original_x = torch.cat(original_x)
+        return self.network(all_original_x)
 
 
 

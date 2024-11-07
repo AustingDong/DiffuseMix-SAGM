@@ -16,7 +16,9 @@ import torch
 import torch.nn as nn
 from itertools import cycle
 import numpy as np
-def make_weights_for_balanced_classes(dataset):
+
+
+def make_weights_for_balanced_classes(dataset) -> torch.Tensor:
     counts = Counter()
     classes = []
     for _, y in dataset:
