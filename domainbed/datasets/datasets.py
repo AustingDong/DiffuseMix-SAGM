@@ -317,7 +317,7 @@ class MultipleEnvironmentImageFolderWithGenerated(MultipleDomainDataset):
         self.datasets: List[OriginalGeneratedDataset] = []
         for environment in environments:
             original_root = os.path.join(root, environment, 'original_resized')
-            generated_root = os.path.join(root, environment, 'generated')
+            generated_root = os.path.join(root, environment, 'blended')
         
             self.datasets.append(OriginalGeneratedDataset(original_root, generated_root))
         
