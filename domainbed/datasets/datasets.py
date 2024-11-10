@@ -349,6 +349,8 @@ class PACS_Generated(MultipleEnvironmentImageFolderWithAdaptiveDiffusemix):
 
     def __init__(self, root: str, args: dict | None = None):
         self.dir = os.path.join(root, "PACS_augmented/")
-        num_slices = args.get("num_slices", 2)
-        alpha = args.get("fractal_weight", 0.2)
+        # num_slices = args.get("num_slices", 2)
+        # alpha = args.get("fractal_weight", 0.2)
+        num_slices = getattr(args, "num_slices", 2)
+        alpha = getattr(args, "fractal_weight", 0.2)
         super().__init__(self.dir, num_slices, alpha)
