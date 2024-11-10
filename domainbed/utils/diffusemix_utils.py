@@ -25,7 +25,7 @@ class AdaptiveDiffuseMixUtils:
         return AdaptiveDiffuseMixUtils.blend_images_with_resize(blended, fractal_img, alpha)
 
     
-    def blend_checkerboard(original_img, augmented_img, num_slices, blend_width=20):
+    def blend_checkerboard(original_img, augmented_img, num_slices, blend_width:int=20):
         """
         Blend two square images in a checkerboard pattern with smooth transitions.
         
