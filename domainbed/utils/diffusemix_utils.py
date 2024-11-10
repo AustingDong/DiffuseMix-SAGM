@@ -55,7 +55,8 @@ class AdaptiveDiffuseMixUtils:
         # Fill the mask with checkerboard pattern
         for i in range(grid_size):
             for j in range(grid_size):
-                if (i + j) % 2 == 1:  # Checker pattern
+                # if (i + j) % 2 == 1:  # Checker pattern
+                if random.random() < 0.5:  # Random pattern
                     top = i * cell_size
                     bottom = (i + 1) * cell_size
                     left = j * cell_size
@@ -141,8 +142,10 @@ class AdaptiveDiffuseMixUtils:
 
 
 if __name__ == "__main__":
-    original_img = Image.open("/Users/ethan/Downloads/root/PACS_augmented/cartoon_augmented/original_resized/dog/pic_001.jpg")
-    augmented_img = Image.open("/Users/ethan/Downloads/root/PACS_augmented/cartoon_augmented/generated/dog/pic_001.jpg_generated_art_painting.jpg")
+    # original_img = Image.open("/Users/ethan/Downloads/root/PACS_augmented/cartoon_augmented/original_resized/dog/pic_001.jpg")
+    original_img = Image.new("RGB", (512, 512), "red")
+    # augmented_img = Image.open("/Users/ethan/Downloads/root/PACS_augmented/cartoon_augmented/generated/dog/pic_001.jpg_generated_art_painting.jpg")
+    augmented_img = Image.new("RGB", (512, 512), "blue")
     fractal_root = "/Users/ethan/Downloads/root/PACS_augmented/cartoon_augmented/fractal"
     num_slices = 16
     blended_img = AdaptiveDiffuseMixUtils.create_image(original_img, augmented_img, fractal_root, Image.open, num_slices)
