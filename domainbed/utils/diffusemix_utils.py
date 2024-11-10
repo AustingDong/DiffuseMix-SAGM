@@ -66,14 +66,14 @@ class AdaptiveDiffuseMixUtils:
         half_blend = blend_width // 2
         
         # Generate transition arrays once
-        h_transition = np.linspace(0, 1, (int)(blend_width)) # cast to integer
+        h_transition = np.linspace(0, 1, blend_width)
         v_transition = h_transition.reshape(-1, 1)
         
         # Horizontal internal borders
         for i in range(1, grid_size):
             y_pos = i * cell_size
             # Create blend region
-            mask[(int)(y_pos-half_blend):(int)(y_pos+half_blend), :] = (
+            mask[y_pos-half_blend:y_pos+half_blend, :] = (
                 (1 - v_transition) * mask[y_pos-half_blend:y_pos+half_blend, :] +
                 v_transition * np.flip(mask[y_pos-half_blend:y_pos+half_blend, :], axis=0)
             )
