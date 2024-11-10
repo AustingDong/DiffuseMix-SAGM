@@ -66,7 +66,7 @@ class AdaptiveDiffuseMixUtils:
         half_blend = blend_width // 2
         
         # Generate transition arrays once
-        h_transition = np.linspace(0, 1, blend_width)
+        h_transition = np.linspace(0, 1, (int)(blend_width)) # cast to integer
         v_transition = h_transition.reshape(-1, 1)
         
         # Horizontal internal borders
