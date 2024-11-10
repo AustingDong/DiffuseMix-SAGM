@@ -73,7 +73,7 @@ class AdaptiveDiffuseMixUtils:
         for i in range(1, grid_size):
             y_pos = i * cell_size
             # Create blend region
-            mask[y_pos-half_blend:y_pos+half_blend, :] = (
+            mask[(int)(y_pos-half_blend):(int)(y_pos+half_blend), :] = (
                 (1 - v_transition) * mask[y_pos-half_blend:y_pos+half_blend, :] +
                 v_transition * np.flip(mask[y_pos-half_blend:y_pos+half_blend, :], axis=0)
             )
