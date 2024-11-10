@@ -60,12 +60,12 @@ class SAGM_DiffuseMix(torch.optim.Optimizer):
                     p.data.sub_(self.state[p]['e_w'])
 
     @torch.no_grad()
-    def gradient_decompose(self, alpha=0.0):
+    def gradient_decompose(self, alpha=0.5):
 
         for group in self.param_groups:
             for p in group['params']:
                 if p.grad is None: continue
-                sam_grad = self.state[p]['old_g'] * 0.5 - p.grad * 0.5
+                sam_grad = self.state[p]['old_g'] * (1 - alpha) - p.grad * alpha
                 p.grad.data.add_(sam_grad)
 
     @torch.no_grad()

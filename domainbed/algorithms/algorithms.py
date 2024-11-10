@@ -213,7 +213,7 @@ class SAGM_DG_DiffuseMix(Algorithm):
     # def __init__(self, input_shape, num_classes, num_domains, hparams):
     #     assert input_shape[1:3] == (224, 224), "Mixstyle support R18 and R50 only"
     #     super().__init__(input_shape, num_classes, num_domains, hparams)
-    def __init__(self, input_shape, num_classes, num_domains, hparams):
+    def __init__(self, input_shape, num_classes, num_domains, hparams, args):
         super().__init__(input_shape, num_classes, num_domains, hparams)
         self.featurizer = networks.Featurizer(input_shape, self.hparams)
         self.classifier = nn.Linear(self.featurizer.n_outputs, num_classes)
@@ -231,30 +231,16 @@ class SAGM_DG_DiffuseMix(Algorithm):
         self.rho_scheduler = LinearScheduler(T_max=5000, max_value=0.05,
                                          min_value=0.05)
 
+        self.alpha = args.get("blended_loss_weight", 0.5)
         self.SAGM_optimizer = SAGM_DiffuseMix(params=self.network.parameters(), base_optimizer=self.optimizer, model=self.network,
-                               alpha=self.hparams["alpha"], rho_scheduler=self.rho_scheduler, adaptive=False)
+                               alpha=self.alpha, rho_scheduler=self.rho_scheduler, adaptive=False)
 
     def update(self, x, y, **kwargs):
-        # print("XXX")
-        # print(x)
-        # print(type(x))
-        # print(len(x))
-        # print(type(x[0]))
-        # print(len(x[0]))
-        # print(x[0][0].shape)
-
-        # print("YYY")
-        # print(y)
-        # print(type(y))
-        # print(len(y))
-
         original_x = [x[i][0] for i in range(len(x))]
         transformed_x = [x[i][1] for i in range(len(x))]
         all_original_x = torch.cat(original_x)
         all_transformed_x = torch.cat(transformed_x)
 
-        # original_x = x[:, 0]  # Original image (first image in the pair)
-        # transformed_x = x[:, 1]  # Generated image (second image in the pair)
         all_y = torch.cat(y)
 
         def loss_fn(predictions, targets):
@@ -270,9 +256,6 @@ class SAGM_DG_DiffuseMix(Algorithm):
 
     def predict(self, x):
         return self.network(x)
-        # original_x = [x[i][0] for i in range(len(x))]
-        # all_original_x = torch.cat(original_x)
-        # return self.network(all_original_x)
 
 
 

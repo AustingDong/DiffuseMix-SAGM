@@ -57,6 +57,9 @@ def main():
         help="[fast, all]. if fast, ignore train_in datasets in evaluation time.",
     )
     parser.add_argument("--prebuild_loader", action="store_true", help="Pre-build eval loaders")
+    parser.add_argument("--fractal_weight", type=float, default=0.2)
+    parser.add_argument("--blended_loss_weight", type=float, default=0.5)
+    parser.add_argument("--num_slices", type=int, default=2)
     args, left_argv = parser.parse_known_args()
     args: Args = args
 
