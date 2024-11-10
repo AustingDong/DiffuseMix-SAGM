@@ -231,7 +231,8 @@ class SAGM_DG_DiffuseMix(Algorithm):
         self.rho_scheduler = LinearScheduler(T_max=5000, max_value=0.05,
                                          min_value=0.05)
 
-        self.alpha = args.get("blended_loss_weight", 0.5)
+        # self.alpha = args.get("blended_loss_weight", 0.5)
+        self.alpha = getattr(args, "blended_loss_weight", 0.5)
         self.SAGM_optimizer = SAGM_DiffuseMix(params=self.network.parameters(), base_optimizer=self.optimizer, model=self.network,
                                alpha=self.alpha, rho_scheduler=self.rho_scheduler, adaptive=False)
 
