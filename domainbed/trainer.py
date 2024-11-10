@@ -130,6 +130,7 @@ def train(test_envs: List[int], args: Args, hparams, n_steps, checkpoint_freq, l
         dataset.num_classes,
         len(dataset) - len(test_envs),
         hparams,
+        args,
     )
 
     algorithm.to(device)

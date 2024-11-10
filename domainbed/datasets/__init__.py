@@ -29,7 +29,7 @@ class _SplitDataset(Dataset):
         ret = {"y": y}
 
         for key, transform in self.transforms.items():
-            # Handle MultipleEnvironmentImageFolderWithGenerated
+            # Handle MultipleEnvironmentImageFolderWithAdaptiveDiffusemix
             if isinstance(x, tuple):
                 ret[key] = tuple(transform(xx) for xx in x)
             else: # Base case
@@ -63,7 +63,7 @@ def get_dataset(
 ) -> tuple[datasets.MultipleEnvironmentImageFolder, list[tuple[_SplitDataset, np.ndarray]], list[tuple[_SplitDataset, np.ndarray]]]:
     """Get dataset and split."""
     is_mnist = "MNIST" in args.dataset
-    dataset: datasets.MultipleEnvironmentImageFolder = vars(datasets)[args.dataset](args.data_dir)
+    dataset: datasets.MultipleEnvironmentImageFolder = vars(datasets)[args.dataset](args.data_dir, args)
     #  if not isinstance(dataset, MultipleEnvironmentImageFolder):
     #      raise ValueError("SMALL image datasets are not implemented (corrupted), for transform.")
 
