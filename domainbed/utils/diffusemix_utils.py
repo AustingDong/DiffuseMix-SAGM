@@ -106,6 +106,7 @@ class AdaptiveDiffuseMixUtils:
     def basic_blend(original_img, augmented_img, blend_width):
         width, height = original_img.size
         combine_choice = random.choice(['horizontal', 'vertical'])
+        blend_width = (int)(blend_width)
 
         if combine_choice == 'vertical':  # Vertical combination
             mask = np.linspace(0, 1, blend_width).reshape(-1, 1)
