@@ -234,7 +234,7 @@ class ERM_DiffuseMix(Algorithm):
             img_grid = torchvision.utils.make_grid(batch_images)
 
             # write to tensorboard
-            writer.add_image('original_vs_augmented_image', img_grid, global_step=i)
+            writer.add_image('original_vs_transformed_image', img_grid, global_step=i)
         
         writer.flush()
         writer.close()
