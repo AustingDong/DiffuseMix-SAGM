@@ -1,6 +1,9 @@
 class Writer:
     def add_scalars(self, tag_scalar_dic, global_step):
         raise NotImplementedError()
+    
+    def add_image(self, title, img, global_step):
+        raise NotImplementedError()
 
     def add_scalars_with_prefix(self, tag_scalar_dic, global_step, prefix):
         tag_scalar_dic = {prefix + k: v for k, v in tag_scalar_dic.items()}
@@ -16,6 +19,10 @@ class TBWriter(Writer):
     def add_scalars(self, tag_scalar_dic, global_step):
         for tag, scalar in tag_scalar_dic.items():
             self.writer.add_scalar(tag, scalar, global_step)
+    
+    def add_image(self, title, img, global_step):
+        self.writer.add_image(title, img, global_step=global_step)
+        
 
 
 def get_writer(dir_path):

@@ -159,7 +159,7 @@ class ERM_DiffuseMix(Algorithm):
             transformed_image = (transformed_image * 255).clip(0, 255).astype(np.uint8)
 
             # Plot the original and transformed images side-by-side in tensorboard 
-            self.writer.flush()
+            # self.writer.flush()
 
             # Stack the images together into a single batch for grid creation
             batch_images = torch.stack([torch.tensor(original_image).permute(2, 0, 1), 
@@ -170,9 +170,6 @@ class ERM_DiffuseMix(Algorithm):
 
             # write to tensorboard
             self.writer.add_image('original_vs_transformed_image', img_grid, global_step=i)
-        
-        self.writer.flush()
-        self.writer.close()
 
 
     def update(self, x, y, **kwargs):
