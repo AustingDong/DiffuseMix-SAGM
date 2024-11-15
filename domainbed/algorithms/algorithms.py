@@ -26,6 +26,81 @@ from domainbed.models.resnet_mixstyle2 import (
 
 from domainbed.sagm import SAGM, SAGM_DiffuseMix, LinearScheduler
 
+# import tensorboard
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+import torch
+import torchvision
+import torchvision.transforms as transforms
+
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+
+# transforms
+transform = transforms.Compose(
+    [transforms.ToTensor(),
+    transforms.Normalize((0.5,), (0.5,))])
+
+# datasets
+trainset = torchvision.datasets.FashionMNIST('./data',
+    download=True,
+    train=True,
+    transform=transform)
+testset = torchvision.datasets.FashionMNIST('./data',
+    download=True,
+    train=False,
+    transform=transform)
+
+# dataloaders
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=4,
+                                        shuffle=True, num_workers=2)
+
+
+testloader = torch.utils.data.DataLoader(testset, batch_size=4,
+                                        shuffle=False, num_workers=2)
+
+# constant for classes
+classes = ('T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat',
+        'Sandal', 'Shirt', 'Sneaker', 'Bag', 'Ankle Boot')
+
+
+class Net(nn.Module):
+    def __init__(self):
+        super(Net, self).__init__()
+        self.conv1 = nn.Conv2d(1, 6, 5)
+        self.pool = nn.MaxPool2d(2, 2)
+        self.conv2 = nn.Conv2d(6, 16, 5)
+        self.fc1 = nn.Linear(16 * 4 * 4, 120)
+        self.fc2 = nn.Linear(120, 84)
+        self.fc3 = nn.Linear(84, 10)
+
+    def forward(self, x):
+        x = self.pool(F.relu(self.conv1(x)))
+        x = self.pool(F.relu(self.conv2(x)))
+        x = x.view(-1, 16 * 4 * 4)
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
+
+
+net = Net()
+
+
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+
+
+from torch.utils.tensorboard import SummaryWriter
+
+# default `log_dir` is "runs" - we'll be more specific here
+writer = SummaryWriter('runs/tensorboardoutput')
+
+
+
 def to_minibatch(x, y):
     minibatches = list(zip(x, y))
     return minibatches
@@ -130,7 +205,43 @@ class ERM_DiffuseMix(Algorithm):
             weight_decay=self.hparams["weight_decay"],
         )
 
+    def tensorboard_visualize(self, x):
+        for i, batch in enumerate(x):
+            # Each batch contains [original_images, transformed_images]
+            original_images = batch[0]  # Tensor with shape [32, 3, 224, 224]
+            transformed_images = batch[1]  # Tensor with shape [32, 3, 224, 224]
+
+            # Select the first image from both original and transformed
+            original_image = original_images[0]  # Shape [3, 224, 224]
+            transformed_image = transformed_images[0]  # Shape [3, 224, 224]
+
+            # Convert to numpy arrays for visualization, with channels last
+            original_image = original_image.permute(1, 2, 0).cpu().numpy()
+            transformed_image = transformed_image.permute(1, 2, 0).cpu().numpy()
+
+            # Ensure images are in the range [0, 255]
+            original_image = (original_image * 255).clip(0, 255).astype(np.uint8)
+            transformed_image = (transformed_image * 255).clip(0, 255).astype(np.uint8)
+
+            # Plot the original and transformed images side-by-side in tensorboard 
+            writer.flush()
+
+            # Stack the images together into a single batch for grid creation
+            batch_images = torch.stack([torch.tensor(original_image).permute(2, 0, 1), 
+                torch.tensor(transformed_image).permute(2, 0, 1)])
+
+            # Create a grid from the batch
+            img_grid = torchvision.utils.make_grid(batch_images)
+
+            # write to tensorboard
+            writer.add_image('original_vs_transformed_image', img_grid, global_step=i)
+        
+        writer.flush()
+        writer.close()
+
+
     def update(self, x, y, **kwargs):
+        self.tensorboard_visualize(x)
 
         original_x = [x[i][0] for i in range(len(x))]
         transformed_x = [x[i][1] for i in range(len(x))]
