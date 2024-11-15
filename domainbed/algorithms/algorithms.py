@@ -55,6 +55,10 @@ class Algorithm(torch.nn.Module):
         self.num_domains = num_domains
         self.hparams = hparams
 
+        # Tensorboard summary writer
+        # default `log_dir` is "runs" - we'll be more specific here
+        self.writer = SummaryWriter('runs/img_visualization')
+
     def update(self, x, y, **kwargs):
         """
         Perform one update step, given a list of (x, y) tuples for all
@@ -103,9 +107,6 @@ class ERM(Algorithm):
             lr=self.hparams["lr"],
             weight_decay=self.hparams["weight_decay"],
         )
-
-        # default `log_dir` is "runs" - we'll be more specific here
-        self.writer = SummaryWriter('runs/img_visualization')
 
     def update(self, x, y, **kwargs):
         all_x = torch.cat(x)
