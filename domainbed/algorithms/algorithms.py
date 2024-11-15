@@ -48,7 +48,7 @@ class Algorithm(torch.nn.Module):
 
     transforms = {}
 
-    def __init__(self, input_shape, num_classes, num_domains, hparams):
+    def __init__(self, input_shape, num_classes, num_domains, hparams, writer):
         super(Algorithm, self).__init__()
         self.input_shape = input_shape
         self.num_classes = num_classes
@@ -57,7 +57,7 @@ class Algorithm(torch.nn.Module):
 
         # Tensorboard summary writer
         # default `log_dir` is "runs" - we'll be more specific here
-        self.writer = SummaryWriter('runs/img_visualization')
+        self.writer = writer
 
     def update(self, x, y, **kwargs):
         """
@@ -127,8 +127,8 @@ class ERM_DiffuseMix(Algorithm):
     Empirical Risk Minimization (ERM) with DiffuseMix
     """
 
-    def __init__(self, input_shape, num_classes, num_domains, hparams, args):
-        super(ERM_DiffuseMix, self).__init__(input_shape, num_classes, num_domains, hparams)
+    def __init__(self, input_shape, num_classes, num_domains, hparams, args, writer):
+        super(ERM_DiffuseMix, self).__init__(input_shape, num_classes, num_domains, hparams, writer)
         self.featurizer = networks.Featurizer(input_shape, self.hparams)
         self.classifier = nn.Linear(self.featurizer.n_outputs, num_classes)
         self.network = nn.Sequential(self.featurizer, self.classifier)
@@ -259,8 +259,8 @@ class SAGM_DG_DiffuseMix(Algorithm):
     # def __init__(self, input_shape, num_classes, num_domains, hparams):
     #     assert input_shape[1:3] == (224, 224), "Mixstyle support R18 and R50 only"
     #     super().__init__(input_shape, num_classes, num_domains, hparams)
-    def __init__(self, input_shape, num_classes, num_domains, hparams, args):
-        super().__init__(input_shape, num_classes, num_domains, hparams)
+    def __init__(self, input_shape, num_classes, num_domains, hparams, args, writer):
+        super().__init__(input_shape, num_classes, num_domains, hparams, writer)
         self.featurizer = networks.Featurizer(input_shape, self.hparams)
         self.classifier = nn.Linear(self.featurizer.n_outputs, num_classes)
         self.network = nn.Sequential(self.featurizer, self.classifier)

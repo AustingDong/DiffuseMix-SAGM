@@ -131,6 +131,7 @@ def train(test_envs: List[int], args: Args, hparams, n_steps, checkpoint_freq, l
         len(dataset) - len(test_envs),
         hparams,
         args,
+        writer # tensorboard writer for image visualization while training
     )
 
     algorithm.to(device)
