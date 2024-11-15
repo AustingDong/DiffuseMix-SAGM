@@ -193,7 +193,7 @@ class ERM_DiffuseMix(Algorithm):
     Empirical Risk Minimization (ERM) with DiffuseMix
     """
 
-    def __init__(self, input_shape, num_classes, num_domains, hparams):
+    def __init__(self, input_shape, num_classes, num_domains, hparams, args):
         super(ERM_DiffuseMix, self).__init__(input_shape, num_classes, num_domains, hparams)
         self.featurizer = networks.Featurizer(input_shape, self.hparams)
         self.classifier = nn.Linear(self.featurizer.n_outputs, num_classes)
