@@ -185,7 +185,8 @@ def train(test_envs: List[int], args: Args, hparams, n_steps, checkpoint_freq, l
 
 
         inputs = {**batches, "step": step}
-        step_vals = algorithm.update(**inputs)
+        step_vals = algorithm.update(**inputs) # training step
+
         for key, val in step_vals.items():
             checkpoint_vals[key].append(val)
         checkpoint_vals["step_time"].append(time.time() - step_start_time)
