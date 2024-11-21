@@ -173,7 +173,11 @@ class ERM_DiffuseMix(Algorithm):
         x_original = x[0]
         x_augmented = x[1]
 
-        print(f"len x_original: {len(x[0])}, len x_augmented: {len(x_augmented)}")
+        print(f"len x_original: {len(x_original)}, len x_augmented: {len(x_augmented)}")
+        print(f"len x_original[0]: {len(x_original[0])}")
+        print(f"len x_original[0][0]: {len(x_original[0][0])}")
+        print(f"len x_original[0][0][0]: {len(x_original[0][0][0])}")
+        print(f"len x_original[0][0][0][0]: {len(x_original[0][0][0][0])}")
         for i in range(len(x)):
             original_images = x_original[i]
             transformed_images = x_augmented[i]
