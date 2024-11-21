@@ -69,7 +69,7 @@ class Algorithm(torch.nn.Module):
     def check_shape(self, x, layer=1):
         print(f"layer{layer}: {len(x)}")
         try:
-            self.check_shape(x[0])
+            self.check_shape(x[0], layer+1)
         except:
             return
 
