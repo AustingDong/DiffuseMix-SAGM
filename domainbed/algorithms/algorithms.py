@@ -176,30 +176,31 @@ class ERM_DiffuseMix(Algorithm):
         # shape x: (3, 2, 32, 3, 224, 224)
 
         self.check_shape(x)
-        x = x[0] # (2, 32, 3, 224, 224)
-        x_original = x[0]   # (32, 3, 224, 224)
-        x_augmented = x[1]  # (32, 3, 224, 224)
+        for k in range(x):
+            x_c = x[k] # (2, 32, 3, 224, 224)
+            x_original = x_c[0]   # (32, 3, 224, 224)
+            x_augmented = x_c[1]  # (32, 3, 224, 224)
 
-        for i in range(len(x)):
-            original_image = x_original[i] # (3, 224, 224)
-            transformed_image = x_augmented[i] # (3, 224, 224)
+            for i in range(len(x)):
+                original_image = x_original[i] # (3, 224, 224)
+                transformed_image = x_augmented[i] # (3, 224, 224)
 
-            # Keep everything on GPU
-            original_image = original_image * 255  # Scale to [0, 255]
-            transformed_image = transformed_image * 255
+                # Keep everything on GPU
+                original_image = original_image * 255  # Scale to [0, 255]
+                transformed_image = transformed_image * 255
 
-            # Ensure images are clamped to valid range
-            original_image = original_image.clamp(0, 255).to(torch.uint8)  # Shape [3, 224, 224]
-            transformed_image = transformed_image.clamp(0, 255).to(torch.uint8)
+                # Ensure images are clamped to valid range
+                original_image = original_image.clamp(0, 255).to(torch.uint8)  # Shape [3, 224, 224]
+                transformed_image = transformed_image.clamp(0, 255).to(torch.uint8)
 
-            # Stack images on GPU
-            batch_images = torch.stack([original_image, transformed_image])  # Shape [2, 3, 224, 224]
+                # Stack images on GPU
+                batch_images = torch.stack([original_image, transformed_image])  # Shape [2, 3, 224, 224]
 
-            # Create a grid from the batch directly on GPU
-            img_grid = torchvision.utils.make_grid(batch_images)
+                # Create a grid from the batch directly on GPU
+                img_grid = torchvision.utils.make_grid(batch_images)
 
-            # Write to TensorBoard (move the final grid to CPU only for visualization)
-            self.writer.add_image('original_vs_transformed_image', img_grid.cpu(), global_step=i)
+                # Write to TensorBoard (move the final grid to CPU only for visualization)
+                self.writer.add_image('original_vs_transformed_image', img_grid.cpu(), global_step= (i + 1) * (k + 1))
 
 
     def update(self, x, y, **kwargs):
