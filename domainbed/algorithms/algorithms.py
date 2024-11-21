@@ -169,9 +169,11 @@ class ERM_DiffuseMix(Algorithm):
         #     self.writer.add_image('original_vs_transformed_image', img_grid.cpu(), global_step=i)
 
         # shape x: (2, 32, 3, 224, 224)
+        print(f"len x: {len(x)}")
         x_original = x[0]
         x_augmented = x[1]
 
+        print(f"len x_original: {len(x[0])}, len x_augmented: {len(x_augmented)}")
         for i in range(len(x)):
             original_images = x_original[i]
             transformed_images = x_augmented[i]
