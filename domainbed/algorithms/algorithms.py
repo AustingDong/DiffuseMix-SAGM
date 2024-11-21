@@ -173,10 +173,10 @@ class ERM_DiffuseMix(Algorithm):
         #     # Write to TensorBoard (move the final grid to CPU only for visualization)
         #     self.writer.add_image('original_vs_transformed_image', img_grid.cpu(), global_step=i)
 
-        # shape x: (2, 32, 3, 224, 224)
+        # shape x: (3, 2, 32, 3, 224, 224)
 
         self.check_shape(x)
-        x = x[0]
+        x = x[0] # (2, 32, 3, 224, 224)
         x_original = x[0]
         x_augmented = x[1]
 
