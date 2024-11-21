@@ -176,7 +176,7 @@ class ERM_DiffuseMix(Algorithm):
         # shape x: (2, 32, 3, 224, 224)
 
         self.check_shape(x)
-
+        x = x[0]
         x_original = x[0]
         x_augmented = x[1]
 
