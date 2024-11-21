@@ -177,16 +177,12 @@ class ERM_DiffuseMix(Algorithm):
 
         self.check_shape(x)
         x = x[0] # (2, 32, 3, 224, 224)
-        x_original = x[0]
-        x_augmented = x[1]
+        x_original = x[0]   # (32, 3, 224, 224)
+        x_augmented = x[1]  # (32, 3, 224, 224)
 
         for i in range(len(x)):
-            original_images = x_original[i]
-            transformed_images = x_augmented[i]
-
-            # Select the first image from both original and transformed
-            original_image = original_images[0]  # Shape [3, 224, 224]
-            transformed_image = transformed_images[0]  # Shape [3, 224, 224]
+            original_image = x_original[i] # (3, 224, 224)
+            transformed_image = x_augmented[i] # (3, 224, 224)
 
             # Keep everything on GPU
             original_image = original_image * 255  # Scale to [0, 255]
