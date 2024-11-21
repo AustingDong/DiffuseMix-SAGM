@@ -139,42 +139,42 @@ class ERM_DiffuseMix(Algorithm):
             weight_decay=self.hparams["weight_decay"],
         )
 
-    # def tensorboard_visualize(self, x):
-        
-    #     for i, batch in enumerate(x):
-    #         # Each batch contains [original_images, transformed_images]
-    #         original_images = batch[0]  # Tensor with shape [32, 3, 224, 224]
-    #         transformed_images = batch[1]  # Tensor with shape [32, 3, 224, 224]
-
-    #         # Select the first image from both original and transformed
-    #         original_image = original_images[0]  # Shape [3, 224, 224]
-    #         transformed_image = transformed_images[0]  # Shape [3, 224, 224]
-
-    #         # Convert to numpy arrays for visualization, with channels last
-    #         original_image = original_image.permute(1, 2, 0).cpu().numpy()
-    #         transformed_image = transformed_image.permute(1, 2, 0).cpu().numpy()
-
-    #         # Ensure images are in the range [0, 255]
-    #         original_image = (original_image * 255).clip(0, 255).astype(np.uint8)
-    #         transformed_image = (transformed_image * 255).clip(0, 255).astype(np.uint8)
-
-    #         # Plot the original and transformed images side-by-side in tensorboard 
-    #         # self.writer.flush()
-
-    #         # Stack the images together into a single batch for grid creation
-    #         batch_images = torch.stack([torch.tensor(original_image).permute(2, 0, 1), 
-    #             torch.tensor(transformed_image).permute(2, 0, 1)])
-
-    #         # Create a grid from the batch
-    #         img_grid = torchvision.utils.make_grid(batch_images)
-
-    #         # write to tensorboard
-    #         self.writer.add_image('original_vs_transformed_image', img_grid, global_step=i)
+    
     def tensorboard_visualize(self, x):
-        for i, batch in enumerate(x):
-            # Each batch contains [original_images, transformed_images]
-            original_images = batch[0]  # Tensor with shape [32, 3, 224, 224]
-            transformed_images = batch[1]  # Tensor with shape [32, 3, 224, 224]
+        
+        # for i, batch in enumerate(x):
+        #     # Each batch contains [original_images, transformed_images]
+        #     original_images = batch[0]  # Tensor with shape [32, 3, 224, 224]
+        #     transformed_images = batch[1]  # Tensor with shape [32, 3, 224, 224]
+
+        #     # Select the first image from both original and transformed
+        #     original_image = original_images[0]  # Shape [3, 224, 224]
+        #     transformed_image = transformed_images[0]  # Shape [3, 224, 224]
+
+        #     # Keep everything on GPU
+        #     original_image = original_image * 255  # Scale to [0, 255]
+        #     transformed_image = transformed_image * 255
+
+        #     # Ensure images are clamped to valid range
+        #     original_image = original_image.clamp(0, 255).to(torch.uint8)  # Shape [3, 224, 224]
+        #     transformed_image = transformed_image.clamp(0, 255).to(torch.uint8)
+
+        #     # Stack images on GPU
+        #     batch_images = torch.stack([original_image, transformed_image])  # Shape [2, 3, 224, 224]
+
+        #     # Create a grid from the batch directly on GPU
+        #     img_grid = torchvision.utils.make_grid(batch_images)
+
+        #     # Write to TensorBoard (move the final grid to CPU only for visualization)
+        #     self.writer.add_image('original_vs_transformed_image', img_grid.cpu(), global_step=i)
+
+        # shape x: (2, 32, 3, 224, 224)
+        x_original = x[0]
+        x_augmented = x[1]
+
+        for i in range(len(x)):
+            original_images = x_original[i]
+            transformed_images = x_augmented[i]
 
             # Select the first image from both original and transformed
             original_image = original_images[0]  # Shape [3, 224, 224]
@@ -196,6 +196,7 @@ class ERM_DiffuseMix(Algorithm):
 
             # Write to TensorBoard (move the final grid to CPU only for visualization)
             self.writer.add_image('original_vs_transformed_image', img_grid.cpu(), global_step=i)
+
 
     def update(self, x, y, **kwargs):
         self.tensorboard_visualize(x)
