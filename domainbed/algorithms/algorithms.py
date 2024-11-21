@@ -66,7 +66,12 @@ class Algorithm(torch.nn.Module):
         """
         raise NotImplementedError
 
-
+    def check_shape(self, x, layer=1):
+        print(f"layer{layer}: {len(x)}")
+        try:
+            self.check_shape(x[0])
+        except:
+            return
 
     def predict(self, x):
         raise NotImplementedError
@@ -169,15 +174,12 @@ class ERM_DiffuseMix(Algorithm):
         #     self.writer.add_image('original_vs_transformed_image', img_grid.cpu(), global_step=i)
 
         # shape x: (2, 32, 3, 224, 224)
-        print(f"len x: {len(x)}")
+
+        self.check_shape(x)
+
         x_original = x[0]
         x_augmented = x[1]
 
-        print(f"len x_original: {len(x_original)}, len x_augmented: {len(x_augmented)}")
-        print(f"len x_original[0]: {len(x_original[0])}")
-        print(f"len x_original[0][0]: {len(x_original[0][0])}")
-        print(f"len x_original[0][0][0]: {len(x_original[0][0][0])}")
-        print(f"len x_original[0][0][0][0]: {len(x_original[0][0][0][0])}")
         for i in range(len(x)):
             original_images = x_original[i]
             transformed_images = x_augmented[i]
