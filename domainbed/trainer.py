@@ -18,6 +18,7 @@ from domainbed.lib.query import Q
 from domainbed.lib.fast_data_loader import InfiniteDataLoader, FastDataLoader
 from domainbed import swad as swad_module
 from domainbed.structs.args import Args
+from domainbed.visualization import img_visualize
 
 if torch.cuda.is_available():
     device = "cuda"
@@ -190,6 +191,11 @@ def train(test_envs: List[int], args: Args, hparams, n_steps, checkpoint_freq, l
         for key, val in step_vals.items():
             checkpoint_vals[key].append(val)
         checkpoint_vals["step_time"].append(time.time() - step_start_time)
+
+        
+        # visualize training imgs
+        img_visualize(inputs['x'], step, writer)
+
 
         if swad:
             # swad_algorithm is segment_swa for swad
