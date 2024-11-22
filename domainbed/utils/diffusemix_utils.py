@@ -144,8 +144,8 @@ class AdaptiveDiffuseMixUtils:
 
 
 if __name__ == "__main__":
-    original_img = Image.open("test/test_images/original/t1.jpg")
-    augmented_img = Image.open("test/test_images/generated/t1.jpg")
+    original_img = Image.open("test/test_images/original/t1.jpg").resize((224, 224))
+    augmented_img = Image.open("test/test_images/generated/t1.jpg").resize((224, 224))
     fractal_root = "test/test_images/fractal"
     num_slices = 2
     blended_img = AdaptiveDiffuseMixUtils.create_image(original_img, augmented_img, fractal_root, Image.open, num_slices)

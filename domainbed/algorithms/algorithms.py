@@ -200,7 +200,7 @@ class ERM_DiffuseMix(Algorithm):
                 img_grid = torchvision.utils.make_grid(batch_images)
 
                 # Write to TensorBoard (move the final grid to CPU only for visualization)
-                self.writer.add_image('original_vs_transformed_image', img_grid.cpu(), global_step= (i + 1) + len(x) * k)
+                self.writer.add_image('original_vs_transformed_image', img_grid.cpu(), global_step= (i + 1) + len(x) * (k + 1))
 
 
     def update(self, x, y, **kwargs):
