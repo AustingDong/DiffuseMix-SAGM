@@ -215,6 +215,12 @@ class ERM_DiffuseMix(Algorithm):
         all_transformed_x = torch.cat(transformed_x)
         all_y = torch.cat(y)
 
+        print("all_original_x:")
+        self.check_shape(all_original_x)
+
+        print("all_transformed_x:")
+        self.check_shape(all_transformed_x)
+
         loss_original = F.cross_entropy(self.predict(all_original_x), all_y)
         loss_transformed = F.cross_entropy(self.predict(all_transformed_x), all_y)
         loss = torch.add(loss_original, loss_transformed)
