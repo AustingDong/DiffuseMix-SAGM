@@ -194,8 +194,9 @@ def train(test_envs: List[int], args: Args, hparams, n_steps, checkpoint_freq, l
 
         
         # visualize training imgs
+        print(f"visualize step{step}")
         img_visualize(inputs['x'], step, writer)
-
+        print("done")
 
         if swad:
             # swad_algorithm is segment_swa for swad
