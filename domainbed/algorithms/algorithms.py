@@ -193,7 +193,7 @@ class ERM_DiffuseMix(Algorithm):
 
 
     def update(self, x, y, **kwargs):
-        # self.tensorboard_visualize(x)
+        self.tensorboard_visualize(x)
 
         print("training:")
         self.check_shape(x)
