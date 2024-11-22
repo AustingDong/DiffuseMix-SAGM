@@ -46,4 +46,5 @@ def img_visualize(x, step, writer):
                 img_grid = torchvision.utils.make_grid(batch_images)
 
                 # Write to TensorBoard (move the final grid to CPU only for visualization)
-                writer.add_image('original_vs_transformed_image', img_grid.cpu(), global_step=i + len(x) * k + 100 * step)
+                writer.add_image('original_vs_transformed_image', img_grid.cpu(), global_step=i + len(x) * k + step)
+                
