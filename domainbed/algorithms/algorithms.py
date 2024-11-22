@@ -193,13 +193,22 @@ class ERM_DiffuseMix(Algorithm):
 
 
     def update(self, x, y, **kwargs):
-        self.tensorboard_visualize(x)
+        # self.tensorboard_visualize(x)
+
+        print("training:")
+        self.check_shape(x)
 
         original_x = [x[i][0] for i in range(len(x))]
         transformed_x = [x[i][1] for i in range(len(x))]
         all_original_x = torch.cat(original_x)
         all_transformed_x = torch.cat(transformed_x)
         all_y = torch.cat(y)
+
+        print("all_original_x:")
+        self.check_shape(all_original_x)
+
+        print("all_transformed_x:")
+        self.check_shape(all_transformed_x)
 
         loss_original = F.cross_entropy(self.predict(all_original_x), all_y)
         loss_transformed = F.cross_entropy(self.predict(all_transformed_x), all_y)
@@ -212,6 +221,8 @@ class ERM_DiffuseMix(Algorithm):
         return {"loss": loss.item()}
 
     def predict(self, x):
+        print("predict:")
+        self.check_shape(x)
         return self.network(x)
         # original_x = [x[i][0] for i in range(len(x))]
         # all_original_x = torch.cat(original_x)
