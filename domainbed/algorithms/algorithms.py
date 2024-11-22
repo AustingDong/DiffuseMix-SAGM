@@ -165,7 +165,7 @@ class ERM_DiffuseMix(Algorithm):
             x_original = x_c[0]   # (32, 3, 224, 224)
             x_augmented = x_c[1]  # (32, 3, 224, 224)
 
-            for i in range(len(x)):
+            for i in range(len(x_c)):
                 original_image = x_original[i] # (3, 224, 224)
                 transformed_image = x_augmented[i] # (3, 224, 224)
                 
@@ -189,7 +189,7 @@ class ERM_DiffuseMix(Algorithm):
                 img_grid = torchvision.utils.make_grid(batch_images)
 
                 # Write to TensorBoard (move the final grid to CPU only for visualization)
-                self.writer.add_image('original_vs_transformed_image', img_grid.cpu(), global_step= (i + 1) + len(x) * (k + 1))
+                self.writer.add_image('original_vs_transformed_image', img_grid.cpu(), global_step= (i + 1) + len(x_c) * (k + 1))
 
 
     def update(self, x, y, **kwargs):
