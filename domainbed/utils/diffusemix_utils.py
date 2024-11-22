@@ -144,12 +144,12 @@ class AdaptiveDiffuseMixUtils:
 
 
 if __name__ == "__main__":
-    original_img = Image.open("/Users/ethan/Downloads/root/PACS_augmented/cartoon_augmented/original_resized/dog/pic_001.jpg")
-    augmented_img = Image.open("/Users/ethan/Downloads/root/PACS_augmented/cartoon_augmented/generated/dog/pic_001.jpg_generated_art_painting.jpg")
-    fractal_root = "/Users/ethan/Downloads/root/PACS_augmented/cartoon_augmented/fractal"
-    num_slices = 16
+    original_img = Image.open("test/test_images/original/t1.jpg")
+    augmented_img = Image.open("test/test_images/generated/t1.jpg")
+    fractal_root = "test/test_images/fractal"
+    num_slices = 2
     blended_img = AdaptiveDiffuseMixUtils.create_image(original_img, augmented_img, fractal_root, Image.open, num_slices)
     
     # write the blended image to a file
-    output_path = "/Users/ethan/Downloads/blended.jpg"
+    output_path = "test/result/blended.jpg"
     blended_img.save(output_path)
