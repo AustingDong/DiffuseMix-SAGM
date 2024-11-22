@@ -193,16 +193,18 @@ def train(test_envs: List[int], args: Args, hparams, n_steps, checkpoint_freq, l
         checkpoint_vals["step_time"].append(time.time() - step_start_time)
 
         
-        # visualize training imgs
-        print(f"visualize step{step}")
-        img_visualize(inputs['x'], step, writer)
-        print("done")
 
         if swad:
             # swad_algorithm is segment_swa for swad
             swad_algorithm.update_parameters(algorithm, step=step)
 
         if step % checkpoint_freq == 0:
+
+            # visualize training imgs
+            print(f"visualize step{step}")
+            img_visualize(inputs['x'], step, writer)
+            print("done")
+            
             results = {
                 "step": step,
                 "epoch": step / steps_per_epoch,
