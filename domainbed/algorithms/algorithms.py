@@ -174,7 +174,7 @@ class ERM_DiffuseMix(Algorithm):
         #     self.writer.add_image('original_vs_transformed_image', img_grid.cpu(), global_step=i)
 
         # shape x: (3, 2, 32, 3, 224, 224)
-
+        print("training:")
         self.check_shape(x)
         for k in range(len(x)):
             x_c = x[k] # (2, 32, 3, 224, 224)
@@ -204,7 +204,10 @@ class ERM_DiffuseMix(Algorithm):
 
 
     def update(self, x, y, **kwargs):
-        self.tensorboard_visualize(x)
+        # self.tensorboard_visualize(x)
+
+        print("training:")
+        self.check_shape(x)
 
         original_x = [x[i][0] for i in range(len(x))]
         transformed_x = [x[i][1] for i in range(len(x))]
@@ -223,6 +226,8 @@ class ERM_DiffuseMix(Algorithm):
         return {"loss": loss.item()}
 
     def predict(self, x):
+        print("predict:")
+        self.check_shape(x)
         return self.network(x)
         # original_x = [x[i][0] for i in range(len(x))]
         # all_original_x = torch.cat(original_x)
