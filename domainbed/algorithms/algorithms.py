@@ -147,7 +147,7 @@ class ERM_DiffuseMix(Algorithm):
     
     def tensorboard_visualize(self, x):
         # shape x: (3, 2, 32, 3, 224, 224)
-        self.check_shape(x)
+        # self.check_shape(x)
         
         def min_max_normalize(standardized_image):
             min_val = standardized_image.min()
