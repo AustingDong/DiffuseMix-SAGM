@@ -2,7 +2,7 @@ import torch
 import torchvision
 
 def img_visualize(x, step, writer):
-    # shape x: (3, 2, 32, 3, 224, 224)
+    # shape x: (3, 2, 32, 3, 224, 224) => domain, (original, transformed), batch, channel, height, width 
     # self.check_shape(x)
     
     def min_max_normalize(standardized_image):
