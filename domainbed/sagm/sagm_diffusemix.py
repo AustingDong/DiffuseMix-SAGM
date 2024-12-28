@@ -4,7 +4,7 @@ import contextlib
 from torch.distributed import ReduceOp
 
 class SAGM_DiffuseMix(torch.optim.Optimizer):
-    def __init__(self, params, base_optimizer, model, alpha, rho_scheduler, adaptive=False, perturb_eps=1e-12, grad_reduce='mean', **kwargs):
+    def __init__(self, params, base_optimizer, model, alpha, beta, rho_scheduler, adaptive=False, perturb_eps=1e-12, grad_reduce='mean', **kwargs):
         defaults = dict(adaptive=adaptive, **kwargs)
         super(SAGM_DiffuseMix, self).__init__(params, defaults)
         self.model = model
@@ -14,6 +14,7 @@ class SAGM_DiffuseMix(torch.optim.Optimizer):
         self.rho_scheduler = rho_scheduler
         self.perturb_eps = perturb_eps
         self.alpha = alpha
+        self.beta = 0.5
 
         # initialize self.rho_t
         self.update_rho_t()
@@ -60,12 +61,12 @@ class SAGM_DiffuseMix(torch.optim.Optimizer):
                     p.data.sub_(self.state[p]['e_w'])
 
     @torch.no_grad()
-    def gradient_decompose(self, alpha=0.5):
+    def gradient_decompose(self, beta=0.5):
 
         for group in self.param_groups:
             for p in group['params']:
                 if p.grad is None: continue
-                sam_grad = self.state[p]['old_g'] * (1 - alpha) - p.grad * alpha
+                sam_grad = self.state[p]['old_g'] * (1 - beta) - p.grad * beta
                 p.grad.data.add_(sam_grad)
 
     @torch.no_grad()
@@ -164,7 +165,7 @@ class SAGM_DiffuseMix(torch.optim.Optimizer):
             get_grad(use_transformed=True)
 
             # decompose and get new update direction
-            self.gradient_decompose(self.alpha)
+            self.gradient_decompose(self.beta)
 
             # unperturb
             self.unperturb()

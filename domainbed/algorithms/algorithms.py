@@ -296,9 +296,10 @@ class SAGM_DG_DiffuseMix(Algorithm):
                                          min_value=0.05)
 
         # self.alpha = args.get("blended_loss_weight", 0.5)
-        self.alpha = getattr(args, "blended_loss_weight", 0.5)
+        # self.alpha = getattr(args, "blended_loss_weight", 0.5) # wrong, this alpha is not mixup alpha
+        self.beta = getattr(args, "blended_loss_weight", 0.5)
         self.SAGM_optimizer = SAGM_DiffuseMix(params=self.network.parameters(), base_optimizer=self.optimizer, model=self.network,
-                               alpha=self.alpha, rho_scheduler=self.rho_scheduler, adaptive=False)
+                               alpha=self.hparams["alpha"], beta = self.beta, rho_scheduler=self.rho_scheduler, adaptive=False) # corrected alpha
 
     def update(self, x, y, **kwargs):
         original_x = [x[i][0] for i in range(len(x))]
