@@ -274,11 +274,7 @@ class AdpativeDiffusemixDataset(Dataset):
         # Get the list of class names from the generated folder
         folder_names = [f.name for f in os.scandir(generated_root) if f.is_dir()]
         folder_names = sorted(folder_names) # ensure consistent order
-        print("Folder Names:", folder_names)
-        # Remove test environments' generated images
-        for env in test_envs:
-            folder_names.remove(folder_names[env])
-        print("Folder Names Removed:", folder_names)
+        
         # Iterate through the generated folder to build the mapping
         for class_idx, class_name in enumerate(folder_names):
             class_path = os.path.join(generated_root, class_name)
@@ -287,12 +283,18 @@ class AdpativeDiffusemixDataset(Dataset):
                     # Extract image ID from the generated image filename
                     # use the fact that it's always <image_id>.<style_info>.jpg
                     image_id = img_name.split('.')[0]
+
+                    # parse the style info to get the generated category
+                    image_generated_category = img_name.split('.')[1].split('_blended_')[-1]
                     
                     key = (class_idx, image_id)
                     
                     if image_id not in self.generated_images:
                         self.generated_images[key] = []
-                    self.generated_images[key].append(os.path.join(class_path, img_name))
+
+                    # Exclude test environments' generated images
+                    if image_generated_category not in test_envs:
+                        self.generated_images[key].append(os.path.join(class_path, img_name))
 
     def __len__(self):
         # Return the number of original images
@@ -353,10 +355,12 @@ class MultipleEnvironmentImageFolderWithAdaptiveDiffusemix(MultipleDomainDataset
 class PACS_Generated(MultipleEnvironmentImageFolderWithAdaptiveDiffusemix):
     ENVIRONMENTS = ["A", "C", "P", "S"]
 
-    def __init__(self, root: str, test_envs: List[int], args: dict | None = None):
+    def __init__(self, root: str, test_envs_idxs: List[int], args: dict | None = None):
         self.dir = os.path.join(root, "PACS_augmented/")
         # num_slices = args.get("num_slices", 2)
         # alpha = args.get("fractal_weight", 0.2)
         num_slices = getattr(args, "num_slices", 2)
         alpha = getattr(args, "fractal_weight", 0.2)
+        Environments_Generated = ["art_painting", "cartoon", "photo", "sketch"]
+        test_envs = [Environments_Generated[i] for i in test_envs_idxs]
         super().__init__(self.dir, test_envs, num_slices, alpha)
