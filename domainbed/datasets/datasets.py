@@ -285,16 +285,22 @@ class AdpativeDiffusemixDataset(Dataset):
                     image_id = img_name.split('.')[0]
 
                     # parse the style info to get the generated category
-                    image_generated_category = img_name.split('.')[1].split('_blended_')[-1]
+                    image_generated_category = img_name.split('.')[1].split('_generated_')[-1]
+
                     
                     key = (class_idx, image_id)
                     
-                    if image_id not in self.generated_images:
+                    if key not in self.generated_images:
                         self.generated_images[key] = []
 
                     # Exclude test environments' generated images
                     if image_generated_category not in test_envs:
                         self.generated_images[key].append(os.path.join(class_path, img_name))
+
+        for val in self.generated_images.values():
+            for c in val:
+                if test_envs[0] in c.split('.')[1]:
+                    print("ERROR: data leakage", "test_env: ", test_envs[0], "content: ", c)
 
     def __len__(self):
         # Return the number of original images
