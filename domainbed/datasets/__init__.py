@@ -63,7 +63,11 @@ def get_dataset(
 ) -> tuple[datasets.MultipleEnvironmentImageFolder, list[tuple[_SplitDataset, np.ndarray]], list[tuple[_SplitDataset, np.ndarray]]]:
     """Get dataset and split."""
     is_mnist = "MNIST" in args.dataset
-    dataset: datasets.MultipleEnvironmentImageFolder = vars(datasets)[args.dataset](args.data_dir, args)
+
+    if args.dataset.split("_")[-1] == "Generated":
+        dataset: datasets.MultipleEnvironmentImageFolderWithAdaptiveDiffusemix = vars(datasets)[args.dataset](args.data_dir, test_envs, args)
+    else:
+        dataset: datasets.MultipleEnvironmentImageFolder = vars(datasets)[args.dataset](args.data_dir, args)
     #  if not isinstance(dataset, MultipleEnvironmentImageFolder):
     #      raise ValueError("SMALL image datasets are not implemented (corrupted), for transform.")
 
