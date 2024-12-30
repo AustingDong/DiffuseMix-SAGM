@@ -29,12 +29,11 @@ class _SplitDataset(Dataset):
         ret = {"y": y}
 
         for key, transform in self.transforms.items():
-            # Utilize key as random seed for augmentation
             # Handle MultipleEnvironmentImageFolderWithAdaptiveDiffusemix
             if isinstance(x, tuple):
-                ret[key] = tuple(transform(key)(xx) for xx in x)
+                ret[key] = tuple(transform(x))
             else: # Base case
-                ret[key] = transform(key)(x)
+                ret[key] = transform(x)
 
         return ret
 
@@ -126,7 +125,7 @@ def set_transforms(dset: _SplitDataset, data_type: str, hparams: dict, algorithm
             # Originally, DomainBed use same training augmentation policy to validation.
             # We turn off the augmentation for validation as default,
             # but left the option to reproducibility.
-            dset.transforms = {"x": DBT.get_aug()}
+            dset.transforms = {"x": DBT.get_aug}
     elif data_type == "test":
         dset.transforms = {"x": DBT.get_basic}
     elif data_type == "mnist":
