@@ -274,11 +274,11 @@ class AdpativeDiffusemixDataset(Dataset):
         # Get the list of class names from the generated folder
         folder_names = [f.name for f in os.scandir(generated_root) if f.is_dir()]
         folder_names = sorted(folder_names) # ensure consistent order
-
+        print("Folder Names:", folder_names)
         # Remove test environments' generated images
         for env in test_envs:
             folder_names.remove(folder_names[env])
-        
+        print("Folder Names Removed:", folder_names)
         # Iterate through the generated folder to build the mapping
         for class_idx, class_name in enumerate(folder_names):
             class_path = os.path.join(generated_root, class_name)
