@@ -17,7 +17,7 @@ class _SplitDataset(Dataset):
         super(_SplitDataset, self).__init__()
         self.underlying_dataset = underlying_dataset
         self.keys = keys
-        self.transforms: Dict[str, Compose] = {}
+        self.transforms: Dict[str, function] = {}
 
         self.direct_return = isinstance(underlying_dataset, _SplitDataset)
 
@@ -29,11 +29,12 @@ class _SplitDataset(Dataset):
         ret = {"y": y}
 
         for key, transform in self.transforms.items():
+            # Utilize key as random seed for augmentation
             # Handle MultipleEnvironmentImageFolderWithAdaptiveDiffusemix
             if isinstance(x, tuple):
-                ret[key] = tuple(transform(xx) for xx in x)
+                ret[key] = tuple(transform(key)(xx) for xx in x)
             else: # Base case
-                ret[key] = transform(x)
+                ret[key] = transform(key)(x)
 
         return ret
 
@@ -116,18 +117,18 @@ def set_transforms(dset: _SplitDataset, data_type: str, hparams: dict, algorithm
 
     additional_data = False
     if data_type == "train":
-        dset.transforms = {"x": DBT.aug}
+        dset.transforms = {"x": DBT.get_aug}
         additional_data = True
     elif data_type == "valid":
         if hparams["val_augment"] is False:
-            dset.transforms = {"x": DBT.basic}
+            dset.transforms = {"x": DBT.get_basic}
         else:
             # Originally, DomainBed use same training augmentation policy to validation.
             # We turn off the augmentation for validation as default,
             # but left the option to reproducibility.
-            dset.transforms = {"x": DBT.aug}
+            dset.transforms = {"x": DBT.get_aug()}
     elif data_type == "test":
-        dset.transforms = {"x": DBT.basic}
+        dset.transforms = {"x": DBT.get_basic}
     elif data_type == "mnist":
         # No augmentation for mnist
         dset.transforms = {"x": lambda x: x}
