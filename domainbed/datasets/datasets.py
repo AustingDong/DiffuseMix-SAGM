@@ -255,9 +255,9 @@ class TerraIncognita(MultipleEnvironmentImageFolder):
         self.dir = os.path.join(root, "terra_incognita/")
         super().__init__(self.dir)
 
-
+# DiffuseMix Datasets
 class AdpativeDiffusemixDataset(Dataset):
-    def __init__(self, original_root, generated_root, fractal_root, test_envs, num_slices, alpha):
+    def __init__(self, original_root, generated_root, fractal_root, test_envs, num_slices, alpha, diffusemix):
         # Load the datasets using ImageFolder
         self.original_dataset = ImageFolder(root=original_root)
         self.generated_root = generated_root
@@ -265,6 +265,7 @@ class AdpativeDiffusemixDataset(Dataset):
         self.num_slices = num_slices
         self.utils = AdaptiveDiffuseMixUtils
         self.alpha = alpha # amount of fractal to blend in
+        self.diffusemix = diffusemix # whether to use diffusemix (mix or use only generated image)
         
         # (class_index, image_id) -> [generated_image_path]
         # image id is defined as the unique filename of the original image
@@ -324,14 +325,15 @@ class AdpativeDiffusemixDataset(Dataset):
         generated_image = self.original_dataset.loader(generated_image_path)
 
         # Apply the adaptive diffuse mix
-        generated_image = self.utils.create_image(original_image, generated_image, self.fractal_root, self.original_dataset.loader, self.num_slices, self.alpha)
+        if self.diffusemix:
+            generated_image = self.utils.create_image(original_image, generated_image, self.fractal_root, self.original_dataset.loader, self.num_slices, self.alpha)
 
         # Return the tuple of (original_image, generated_image) and the label
         return (original_image, generated_image), label
 
 
 class MultipleEnvironmentImageFolderWithAdaptiveDiffusemix(MultipleDomainDataset):
-    def __init__(self, root, test_envs, num_slices, alpha):
+    def __init__(self, root, test_envs, num_slices, alpha, diffusemix):
         super().__init__()
         environments = [f.name for f in os.scandir(root) if f.is_dir()]
         environments = sorted(environments)
@@ -343,7 +345,7 @@ class MultipleEnvironmentImageFolderWithAdaptiveDiffusemix(MultipleDomainDataset
             generated_root = os.path.join(root, environment, 'generated')
             fractal_root = os.path.join(root, environment, 'fractal')
         
-            self.datasets.append(AdpativeDiffusemixDataset(original_root, generated_root, fractal_root, test_envs, num_slices, alpha))
+            self.datasets.append(AdpativeDiffusemixDataset(original_root, generated_root, fractal_root, test_envs, num_slices, alpha, diffusemix))
         
         self.input_shape = (3, 224, 224)
         self.num_classes = len(self.datasets[-1].original_dataset.classes)
@@ -367,6 +369,7 @@ class PACS_Generated(MultipleEnvironmentImageFolderWithAdaptiveDiffusemix):
         # alpha = args.get("fractal_weight", 0.2)
         num_slices = getattr(args, "num_slices", 2)
         alpha = getattr(args, "fractal_weight", 0.2)
+        diffusemix = getattr(args, "diffusemix", True)
         Environments_Generated = ["art_painting", "cartoon", "photo", "sketch"]
         test_envs = [Environments_Generated[i] for i in test_envs_idxs]
-        super().__init__(self.dir, test_envs, num_slices, alpha)
+        super().__init__(self.dir, test_envs, num_slices, alpha, diffusemix)
