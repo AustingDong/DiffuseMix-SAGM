@@ -29,7 +29,11 @@ class _SplitDataset(Dataset):
         ret = {"y": y}
 
         for key, transform in self.transforms.items():
-            ret[key] = transform(x)
+            # Handle MultipleEnvironmentImageFolderWithAdaptiveDiffusemix
+            if isinstance(x, tuple):
+                ret[key] = tuple(transform(x))
+            else: # Base case
+                ret[key] = transform(x)
 
         return ret
 
