@@ -4,3 +4,4 @@ __pycache__
 .vscode
 
 train_output
+test
