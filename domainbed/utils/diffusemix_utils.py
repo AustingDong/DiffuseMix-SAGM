@@ -119,7 +119,7 @@ class AdaptiveDiffuseMixUtils:
         # augmented_tensor = torch.from_numpy(np.array(augmented_img, dtype=np.float32) / 255.0).permute(2, 0, 1)  # (C, H, W)
         original_tensor = ToTensor()(original_img)
         augmented_tensor = ToTensor()(augmented_img)
-        
+
         # Initialize the blending mask
         if combine_choice == 'vertical':  # Vertical combination
             mask = torch.linspace(0, 1, blend_width).view(-1, 1).repeat(1, width)  # (H, W)
@@ -158,7 +158,8 @@ class AdaptiveDiffuseMixUtils:
         # blended_img = Image.fromarray(blended_array)
         # return blended_img
 
-        overlay_tensor = torch.from_numpy(np.array(overlay_img_resized, dtype=np.float32) / 255.0).permute(2, 0, 1)
+        # overlay_tensor = torch.from_numpy(np.array(overlay_img_resized, dtype=np.float32) / 255.0).permute(2, 0, 1)
+        overlay_tensor = ToTensor()(overlay_img_resized)
         blended_tensor = (1 - alpha) * base_tensor + alpha * overlay_tensor
         blended_tensor = torch.clamp(blended_tensor * 255, 0, 255).byte()  # Scale back to [0, 255]
         blended_img = Image.fromarray(blended_tensor.permute(1, 2, 0).cpu().numpy())
