@@ -1,13 +1,17 @@
 import random
+import torch
+from torchvision.transforms import ToTensor
 import numpy as np
 from PIL import Image
 import math
 import os
+from time import time
 
 class AdaptiveDiffuseMixUtils:
     @staticmethod
     def create_image(original_img, augmented_img, fractal_root, loader, num_slices, blend_width=20, alpha=0.20):
         # choose mask and blend images
+        base_img_size = original_img.size
         if num_slices == 2:
             blended = AdaptiveDiffuseMixUtils.basic_blend(original_img, augmented_img, blend_width)
         else:
@@ -22,7 +26,7 @@ class AdaptiveDiffuseMixUtils:
                     fractal_img_paths.append(os.path.join(root, fname))
         fractal_img_path = random.choice(fractal_img_paths)
         fractal_img = loader(fractal_img_path)
-        return AdaptiveDiffuseMixUtils.blend_images_with_resize(blended, fractal_img, alpha)
+        return AdaptiveDiffuseMixUtils.blend_images_with_resize(blended, fractal_img, alpha, base_img_size)
 
     
     def blend_checkerboard(original_img, augmented_img, num_slices, blend_width=20):
@@ -89,18 +93,20 @@ class AdaptiveDiffuseMixUtils:
                 h_transition * np.flip(mask[:, x_pos-half_blend:x_pos+half_blend], axis=1)
             )
         
-        # Convert images to arrays and normalize
-        original_array = np.array(original_img, dtype=np.float32) / 255.0
-        augmented_array = np.array(augmented_img, dtype=np.float32) / 255.0
+        # Convert PIL images to PyTorch tensors
+        # original_tensor = torch.from_numpy(np.array(original_img, dtype=np.float32) / 255.0).permute(2, 0, 1)
+        # augmented_tensor = torch.from_numpy(np.array(augmented_img, dtype=np.float32) / 255.0).permute(2, 0, 1)
+        original_tensor = ToTensor()(original_img)
+        augmented_tensor = ToTensor()(augmented_img)
         
         # Expand mask to handle RGB
-        mask = np.stack([mask] * 3, axis=2)
+        mask = torch.from_numpy(mask).float().unsqueeze(0).repeat(3, 1, 1)
         
         # Blend images
-        blended_array = (1 - mask) * original_array + mask * augmented_array
-        blended_array = np.clip(blended_array * 255, 0, 255).astype(np.uint8)
+        blended_tensor = (1 - mask) * original_tensor + mask * augmented_tensor
+        # blended_tensor = torch.clamp(blended_tensor * 255, 0, 255).byte()  # Scale back to [0, 255]
         
-        return Image.fromarray(blended_array)
+        return blended_tensor
     
     @staticmethod
     def basic_blend(original_img, augmented_img, blend_width):
@@ -108,38 +114,54 @@ class AdaptiveDiffuseMixUtils:
         combine_choice = random.choice(['horizontal', 'vertical'])
         blend_width = (int)(blend_width)
 
+        # Convert PIL images to PyTorch tensors
+        # original_tensor = torch.from_numpy(np.array(original_img, dtype=np.float32) / 255.0).permute(2, 0, 1)  # (C, H, W)
+        # augmented_tensor = torch.from_numpy(np.array(augmented_img, dtype=np.float32) / 255.0).permute(2, 0, 1)  # (C, H, W)
+        original_tensor = ToTensor()(original_img)
+        augmented_tensor = ToTensor()(augmented_img)
+        
+        # Initialize the blending mask
         if combine_choice == 'vertical':  # Vertical combination
-            mask = np.linspace(0, 1, blend_width).reshape(-1, 1)
-            mask = np.tile(mask, (1, width))  # Extend mask horizontally
-            mask = np.vstack([np.zeros((height // 2 - blend_width // 2, width)), mask,
-                              np.ones((height // 2 - blend_width // 2 + blend_width % 2, width))])
-            mask = np.tile(mask[:, :, np.newaxis], (1, 1, 3))
+            mask = torch.linspace(0, 1, blend_width).view(-1, 1).repeat(1, width)  # (H, W)
+            mask = torch.cat([
+                torch.zeros(height // 2 - blend_width // 2, width),
+                mask,
+                torch.ones(height // 2 - blend_width // 2 + blend_width % 2, width)
+            ], dim=0)
+        else:  # Horizontal combination
+            mask = torch.linspace(0, 1, blend_width).view(1, -1).repeat(height, 1)  # (H, W)
+            mask = torch.cat([
+                torch.zeros(height, width // 2 - blend_width // 2),
+                mask,
+                torch.ones(height, width // 2 - blend_width // 2 + blend_width % 2)
+            ], dim=1)
 
-        else:
-            mask = np.linspace(0, 1, blend_width).reshape(1, -1)
-            mask = np.tile(mask, (height, 1))  # Extend mask vertically
-            mask = np.hstack([np.zeros((height, width // 2 - blend_width // 2)), mask,
-                              np.ones((height, width // 2 - blend_width // 2 + blend_width % 2))])
-            mask = np.tile(mask[:, :, np.newaxis], (1, 1, 3))
+        # Expand the mask to match the image channels
+        mask = mask.unsqueeze(0).repeat(3, 1, 1)  # (C, H, W)
 
-        original_array = np.array(original_img, dtype=np.float32) / 255.0
-        augmented_array = np.array(augmented_img, dtype=np.float32) / 255.0
+        # Perform blending
+        blended_tensor = (1 - mask) * original_tensor + mask * augmented_tensor
+        # blended_tensor = torch.clamp(blended_tensor * 255, 0, 255).byte()  # Scale back to [0, 255]
 
-        blended_array = (1 - mask) * original_array + mask * augmented_array
-        blended_array = np.clip(blended_array * 255, 0, 255).astype(np.uint8)
-
-        blended_img = Image.fromarray(blended_array)
-        return blended_img
+        # mask = Image.fromarray((mask[0] * 255).byte().cpu().numpy())
+        # mask.save("test/result/mask.jpg")
+        return blended_tensor
 
     @staticmethod
-    def blend_images_with_resize(base_img, overlay_img, alpha=0.20):
-        overlay_img_resized = overlay_img.resize(base_img.size)
-        base_array = np.array(base_img, dtype=np.float32)
-        overlay_array = np.array(overlay_img_resized, dtype=np.float32)
-        assert base_array.shape == overlay_array.shape and len(base_array.shape) == 3
-        blended_array = (1 - alpha) * base_array + alpha * overlay_array
-        blended_array = np.clip(blended_array, 0, 255).astype(np.uint8)
-        blended_img = Image.fromarray(blended_array)
+    def blend_images_with_resize(base_tensor, overlay_img, alpha=0.20, base_img_size=(224, 224)):
+        overlay_img_resized = overlay_img.resize(base_img_size)
+        # base_array = np.array(base_img, dtype=np.float32)
+        # overlay_array = np.array(overlay_img_resized, dtype=np.float32)
+        # assert base_array.shape == overlay_array.shape and len(base_array.shape) == 3
+        # blended_array = (1 - alpha) * base_array + alpha * overlay_array
+        # blended_array = np.clip(blended_array, 0, 255).astype(np.uint8)
+        # blended_img = Image.fromarray(blended_array)
+        # return blended_img
+
+        overlay_tensor = torch.from_numpy(np.array(overlay_img_resized, dtype=np.float32) / 255.0).permute(2, 0, 1)
+        blended_tensor = (1 - alpha) * base_tensor + alpha * overlay_tensor
+        blended_tensor = torch.clamp(blended_tensor * 255, 0, 255).byte()  # Scale back to [0, 255]
+        blended_img = Image.fromarray(blended_tensor.permute(1, 2, 0).cpu().numpy())
         return blended_img
 
 
@@ -148,8 +170,11 @@ if __name__ == "__main__":
     augmented_img = Image.open("test/test_images/generated/t1.jpg").resize((224, 224))
     fractal_root = "test/test_images/fractal"
     num_slices = 2
+
+    start_time = time()
     blended_img = AdaptiveDiffuseMixUtils.create_image(original_img, augmented_img, fractal_root, Image.open, num_slices)
-    
+    end_time = time()
+    print(f"Time taken: {end_time - start_time} seconds")
     # write the blended image to a file
     output_path = "test/result/blended.jpg"
     blended_img.save(output_path)
