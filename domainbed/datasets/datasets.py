@@ -345,8 +345,11 @@ class MultipleEnvironmentImageFolderWithAdaptiveDiffusemix(MultipleDomainDataset
             original_root = os.path.join(root, environment, 'original_resized')
             generated_root = os.path.join(root, environment, 'generated')
             fractal_root = os.path.join(root, environment, 'fractal')
-        
-            self.datasets.append(AdpativeDiffusemixDataset(original_root, generated_root, fractal_root, test_envs, num_slices, alpha, diffusemix))
+
+            if environment == f"{test_envs[0]}_augmented":
+                self.datasets.append(AdpativeDiffusemixDataset(original_root, generated_root, fractal_root, test_envs, num_slices, alpha, 0)) # no diffusemix for test domain, save time
+            else:
+                self.datasets.append(AdpativeDiffusemixDataset(original_root, generated_root, fractal_root, test_envs, num_slices, alpha, diffusemix))
         
         self.input_shape = (3, 224, 224)
         self.num_classes = len(self.datasets[-1].original_dataset.classes)
