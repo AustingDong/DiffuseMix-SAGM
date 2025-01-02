@@ -338,6 +338,7 @@ class MultipleEnvironmentImageFolderWithAdaptiveDiffusemix(MultipleDomainDataset
         environments = [f.name for f in os.scandir(root) if f.is_dir()]
         environments = sorted(environments)
         self.environments = environments
+        print("Environments: ", environments)
 
         self.datasets: List[AdpativeDiffusemixDataset] = []
         for environment in environments:
