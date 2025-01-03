@@ -1,6 +1,7 @@
 import random
 import torch
 from torchvision.transforms import ToTensor
+from torchvision.datasets import ImageFolder
 import numpy as np
 from PIL import Image
 import math
@@ -9,7 +10,8 @@ from time import time
 
 class AdaptiveDiffuseMixUtils:
     @staticmethod
-    def create_image(original_img, augmented_img, fractal_root, loader, num_slices, blend_width=20, alpha=0.20):
+    @torch.no_grad()
+    def create_image(original_img, augmented_img, fractal_root, num_slices, blend_width=20, alpha=0.20):
         # choose mask and blend images
         base_img_size = original_img.size
         if num_slices == 2:
@@ -25,10 +27,12 @@ class AdaptiveDiffuseMixUtils:
                 if fname.endswith(('.png', '.jpg', '.jpeg')):
                     fractal_img_paths.append(os.path.join(root, fname))
         fractal_img_path = random.choice(fractal_img_paths)
+
+        loader = Image.open
         fractal_img = loader(fractal_img_path)
         return AdaptiveDiffuseMixUtils.blend_images_with_resize(blended, fractal_img, alpha, base_img_size)
 
-    
+    @torch.no_grad()
     def blend_checkerboard(original_img, augmented_img, num_slices, blend_width=20):
         """
         Blend two square images in a checkerboard pattern with smooth transitions.
@@ -109,6 +113,7 @@ class AdaptiveDiffuseMixUtils:
         return blended_tensor
     
     @staticmethod
+    @torch.no_grad()
     def basic_blend(original_img, augmented_img, blend_width):
         width, height = original_img.size
         combine_choice = random.choice(['horizontal', 'vertical'])
@@ -148,6 +153,7 @@ class AdaptiveDiffuseMixUtils:
         return blended_tensor
 
     @staticmethod
+    @torch.no_grad()
     def blend_images_with_resize(base_tensor, overlay_img, alpha=0.20, base_img_size=(224, 224)):
         overlay_img_resized = overlay_img.resize(base_img_size)
         # base_array = np.array(base_img, dtype=np.float32)
@@ -173,7 +179,7 @@ if __name__ == "__main__":
     num_slices = 2
 
     start_time = time()
-    blended_img = AdaptiveDiffuseMixUtils.create_image(original_img, augmented_img, fractal_root, Image.open, num_slices)
+    blended_img = AdaptiveDiffuseMixUtils.create_image(original_img, augmented_img, fractal_root, num_slices)
     end_time = time()
     print(f"Time taken: {end_time - start_time} seconds")
     # write the blended image to a file

@@ -306,7 +306,11 @@ class AdpativeDiffusemixDataset(Dataset):
     def __len__(self):
         # Return the number of original images
         return len(self.original_dataset)
-
+    
+    def get_diffusemix_args(self):
+        # Return the arguments for the adaptive diffuse mix
+        return {"fractal_root": self.fractal_root, "num_slices": self.num_slices, "alpha": self.alpha}
+    
     def __getitem__(self, idx):
         # Fetch the original image and its label using ImageFolder
         original_image, label = self.original_dataset[idx]
@@ -325,8 +329,8 @@ class AdpativeDiffusemixDataset(Dataset):
         generated_image = self.original_dataset.loader(generated_image_path)
 
         # Apply the adaptive diffuse mix
-        if self.diffusemix:
-            generated_image = self.utils.create_image(original_image, generated_image, self.fractal_root, self.original_dataset.loader, self.num_slices, self.alpha)
+        # if self.diffusemix:
+        #     generated_image = self.utils.create_image(original_image, generated_image, self.fractal_root, self.num_slices, self.alpha)
 
         # Return the tuple of (original_image, generated_image) and the label
         return (original_image, generated_image), label
@@ -339,6 +343,8 @@ class MultipleEnvironmentImageFolderWithAdaptiveDiffusemix(MultipleDomainDataset
         environments = sorted(environments)
         self.environments = environments
         print("Environments: ", environments)
+
+        self.roots = {}
 
         self.datasets: List[AdpativeDiffusemixDataset] = []
         for environment in environments:
@@ -373,7 +379,7 @@ class PACS_Generated(MultipleEnvironmentImageFolderWithAdaptiveDiffusemix):
         # alpha = args.get("fractal_weight", 0.2)
         num_slices = getattr(args, "num_slices", 2)
         alpha = getattr(args, "fractal_weight", 0.2)
-        diffusemix = getattr(args, "diffusemix", True)
+        diffusemix = getattr(args, "diffusemix", False)
         Environments_Generated = ["art_painting", "cartoon", "photo", "sketch"]
         test_envs = [Environments_Generated[i] for i in test_envs_idxs]
         super().__init__(self.dir, test_envs, num_slices, alpha, diffusemix)

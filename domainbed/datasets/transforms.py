@@ -1,6 +1,7 @@
 from torchvision import transforms as T
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
+from domainbed.utils.diffusemix_utils import AdaptiveDiffuseMixUtils
 import torch
 import numpy as np
 
@@ -40,6 +41,8 @@ aug_T = T.Compose(
             ]
         )
 
+diffusemix_utils = AdaptiveDiffuseMixUtils
+
 def get_basic(x):
     if isinstance(x, tuple):
         x = np.array(x)
@@ -49,9 +52,11 @@ def get_basic(x):
     else:
         return basic_T(x)
 
-def get_aug(x):
+def get_aug(x, diffusemix=False, diffusemix_args=None):
     if isinstance(x, tuple):
-        
+        if diffusemix:
+            blended_img = diffusemix_utils.create_image(x[0], x[1], diffusemix_args["fractal_root"], diffusemix_args["num_slices"], diffusemix_args["alpha"])
+            x = (x[0], blended_img)
         x = np.array(x)
         aug_imgs = aug_A(image=x[0], image_gen=x[1])
         return aug_imgs['image'], aug_imgs['image_gen']

@@ -8,7 +8,7 @@ from domainbed.datasets import datasets
 from domainbed.lib import misc
 from domainbed.datasets import transforms as DBT
 from domainbed.structs.args import Args
-
+from functools import partial
 
 class _SplitDataset(Dataset):
     """Used by split_dataset"""
@@ -64,8 +64,10 @@ def get_dataset(
     """Get dataset and split."""
     is_mnist = "MNIST" in args.dataset
 
+    diffusemix = 0
     if args.dataset.split("_")[-1] == "Generated":
         dataset: datasets.MultipleEnvironmentImageFolderWithAdaptiveDiffusemix = vars(datasets)[args.dataset](args.data_dir, test_envs, args)
+        diffusemix = getattr(args, "diffusemix", 0)
     else:
         dataset: datasets.MultipleEnvironmentImageFolder = vars(datasets)[args.dataset](args.data_dir, args)
     #  if not isinstance(dataset, MultipleEnvironmentImageFolder):
@@ -93,8 +95,12 @@ def get_dataset(
             in_type = "mnist"
             out_type = "mnist"
 
-        set_transforms(in_, in_type, hparams, algorithm_class)
-        set_transforms(out, out_type, hparams, algorithm_class)
+        diffusemix_args = None
+        if diffusemix:
+            diffusemix_args = env.get_diffusemix_args()
+
+        set_transforms(in_, in_type, hparams, algorithm_class, diffusemix, diffusemix_args)
+        set_transforms(out, out_type, hparams, algorithm_class, diffusemix, diffusemix_args)
 
         if hparams["class_balanced"]:
             in_weights = misc.make_weights_for_balanced_classes(in_)
@@ -107,7 +113,7 @@ def get_dataset(
     return dataset, in_splits, out_splits
 
 
-def set_transforms(dset: _SplitDataset, data_type: str, hparams: dict, algorithm_class: Algorithm | None = None):
+def set_transforms(dset: _SplitDataset, data_type: str, hparams: dict, algorithm_class: Algorithm | None = None, diffusemix: int = 0, diffusemix_args: dict = None):
     """
     Args:
         data_type: ['train', 'valid', 'test', 'mnist']
@@ -116,7 +122,8 @@ def set_transforms(dset: _SplitDataset, data_type: str, hparams: dict, algorithm
 
     additional_data = False
     if data_type == "train":
-        dset.transforms = {"x": DBT.get_aug}
+        # use lambda to pass arguments to the function
+        dset.transforms = {"x": partial(DBT.get_aug, diffusemix=diffusemix, diffusemix_args=diffusemix_args)}
         additional_data = True
     elif data_type == "valid":
         if hparams["val_augment"] is False:
@@ -125,7 +132,7 @@ def set_transforms(dset: _SplitDataset, data_type: str, hparams: dict, algorithm
             # Originally, DomainBed use same training augmentation policy to validation.
             # We turn off the augmentation for validation as default,
             # but left the option to reproducibility.
-            dset.transforms = {"x": DBT.get_aug}
+            dset.transforms = {"x": partial(DBT.get_aug, diffusemix=diffusemix, diffusemix_args=diffusemix_args)}
     elif data_type == "test":
         dset.transforms = {"x": DBT.get_basic}
     elif data_type == "mnist":
