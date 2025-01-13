@@ -1,0 +1,1 @@
+python domainbed\scripts\download.py --data_dir D:/Datasets
