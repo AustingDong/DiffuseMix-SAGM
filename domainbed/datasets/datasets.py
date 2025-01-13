@@ -389,7 +389,7 @@ class OfficeHome_Generated(MultipleEnvironmentImageFolderWithAdaptiveDiffusemix)
     ENVIRONMENTS = ["A", "C", "P", "R"]
 
     def __init__(self, root: str, test_envs_idxs: List[int], args: dict | None = None):
-        self.dir = os.path.join(root, "office_home/")
+        self.dir = os.path.join(root, "OfficeHome_augmented/")
 
         num_slices = getattr(args, "num_slices", 2)
         alpha = getattr(args, "fractal_weight", 0.2)
