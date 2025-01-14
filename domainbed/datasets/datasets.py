@@ -382,7 +382,7 @@ class PACS_Generated(MultipleEnvironmentImageFolderWithAdaptiveDiffusemix):
         num_slices = getattr(args, "num_slices", 2)
         alpha = getattr(args, "fractal_weight", 0.2)
         diffusemix = getattr(args, "diffusemix", False)
-        manual_mix = getattr(args, "manual_mix", True)
+        manual_mix = getattr(args, "manual_mix", False)
         
         Environments_Generated = ["art_painting", "cartoon", "photo", "sketch"]
         test_envs = [Environments_Generated[i] for i in test_envs_idxs]
@@ -398,7 +398,7 @@ class OfficeHome_Generated(MultipleEnvironmentImageFolderWithAdaptiveDiffusemix)
         num_slices = getattr(args, "num_slices", 2)
         alpha = getattr(args, "fractal_weight", 0.2)
         diffusemix = getattr(args, "diffusemix", False)
-        manual_mix = getattr(args, "manual_mix", True)
+        manual_mix = getattr(args, "manual_mix", False)
 
         Environments_Generated = ["Art", "Clipart", "Product", "RealWorld"]
         test_envs = [Environments_Generated[i] for i in test_envs_idxs]
