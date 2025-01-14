@@ -337,7 +337,7 @@ class AdpativeDiffusemixDataset(Dataset):
 
 
 class MultipleEnvironmentImageFolderWithAdaptiveDiffusemix(MultipleDomainDataset):
-    def __init__(self, root, test_envs, num_slices, alpha, diffusemix):
+    def __init__(self, root, test_envs, num_slices, alpha, diffusemix, manual_mix):
         super().__init__()
         environments = [f.name for f in os.scandir(root) if f.is_dir()]
         environments = sorted(environments)
@@ -347,9 +347,11 @@ class MultipleEnvironmentImageFolderWithAdaptiveDiffusemix(MultipleDomainDataset
         self.roots = {}
 
         self.datasets: List[AdpativeDiffusemixDataset] = []
+        if not manual_mix:
+            diffusemix = 0 # no need to manually apply diffusemix
         for environment in environments:
             original_root = os.path.join(root, environment, 'original_resized')
-            generated_root = os.path.join(root, environment, 'generated')
+            generated_root = os.path.join(root, environment, 'generated' if manual_mix else 'blended')
             fractal_root = os.path.join(root, environment, 'fractal')
 
             if environment == f"{test_envs[0]}_augmented":
@@ -380,9 +382,11 @@ class PACS_Generated(MultipleEnvironmentImageFolderWithAdaptiveDiffusemix):
         num_slices = getattr(args, "num_slices", 2)
         alpha = getattr(args, "fractal_weight", 0.2)
         diffusemix = getattr(args, "diffusemix", False)
+        manual_mix = getattr(args, "manual_mix", True)
+        
         Environments_Generated = ["art_painting", "cartoon", "photo", "sketch"]
         test_envs = [Environments_Generated[i] for i in test_envs_idxs]
-        super().__init__(self.dir, test_envs, num_slices, alpha, diffusemix)
+        super().__init__(self.dir, test_envs, num_slices, alpha, diffusemix, manual_mix)
 
 class OfficeHome_Generated(MultipleEnvironmentImageFolderWithAdaptiveDiffusemix):
     CHECKPOINT_FREQ = 200
@@ -394,6 +398,8 @@ class OfficeHome_Generated(MultipleEnvironmentImageFolderWithAdaptiveDiffusemix)
         num_slices = getattr(args, "num_slices", 2)
         alpha = getattr(args, "fractal_weight", 0.2)
         diffusemix = getattr(args, "diffusemix", False)
+        manual_mix = getattr(args, "manual_mix", True)
+
         Environments_Generated = ["Art", "Clipart", "Product", "RealWorld"]
         test_envs = [Environments_Generated[i] for i in test_envs_idxs]
-        super().__init__(self.dir, test_envs, num_slices, alpha, diffusemix)
+        super().__init__(self.dir, test_envs, num_slices, alpha, diffusemix, manual_mix)
