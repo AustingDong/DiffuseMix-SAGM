@@ -257,7 +257,7 @@ class TerraIncognita(MultipleEnvironmentImageFolder):
 
 # DiffuseMix Datasets
 class AdpativeDiffusemixDataset(Dataset):
-    def __init__(self, original_root, generated_root, fractal_root, test_envs, num_slices, alpha, diffusemix):
+    def __init__(self, original_root, generated_root, fractal_root, test_envs, num_slices, alpha, diffusemix, blended=True):
         # Load the datasets using ImageFolder
         self.original_dataset = ImageFolder(root=original_root)
         self.generated_root = generated_root
@@ -286,7 +286,7 @@ class AdpativeDiffusemixDataset(Dataset):
                     image_id = img_name.split('.')[0]
 
                     # parse the style info to get the generated category
-                    image_generated_category = img_name.split('.')[1].split('_generated_')[-1]
+                    image_generated_category = img_name.split('.')[1].split('_blended_' if blended else '_generated_')[-1]
 
                     
                     key = (class_idx, image_id)
@@ -355,9 +355,9 @@ class MultipleEnvironmentImageFolderWithAdaptiveDiffusemix(MultipleDomainDataset
             fractal_root = os.path.join(root, environment, 'fractal')
 
             if environment == f"{test_envs[0]}_augmented":
-                self.datasets.append(AdpativeDiffusemixDataset(original_root, generated_root, fractal_root, test_envs, num_slices, alpha, 0)) # no diffusemix for test domain, save time
+                self.datasets.append(AdpativeDiffusemixDataset(original_root, generated_root, fractal_root, test_envs, num_slices, alpha, 0, blended=not manual_mix)) # no diffusemix for test domain, save time
             else:
-                self.datasets.append(AdpativeDiffusemixDataset(original_root, generated_root, fractal_root, test_envs, num_slices, alpha, diffusemix))
+                self.datasets.append(AdpativeDiffusemixDataset(original_root, generated_root, fractal_root, test_envs, num_slices, alpha, diffusemix, blended=not manual_mix))
         
         self.input_shape = (3, 224, 224)
         self.num_classes = len(self.datasets[-1].original_dataset.classes)
