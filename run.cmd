@@ -1,1 +1,1 @@
-python train_all.py sagm_test --dataset PACS_Generated --data_dir "D:\Datasets\diffuseMix_augmented"  --algorithm ERM_DiffuseMix --deterministic --trial_seed 110 --checkpoint_freq 100 --lr 3e-5 --weight_decay 1e-4 --resnet_dropout 0.5 --swad False --num_slices 2
+python train_all.py sagm_test --img_visualize 1 --diffusemix 0 --dataset PACS_Generated --data_dir "E:/Datasets/diffuseMix_augmented"  --algorithm SAGM_DG_DiffuseMix --deterministic --trial_seed 0 --checkpoint_freq 100 --lr 3e-5 --weight_decay 1e-4 --resnet_dropout 0.5 --swad False --num_slices 2
