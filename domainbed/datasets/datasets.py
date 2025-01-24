@@ -409,7 +409,7 @@ class VLCS_Generated(MultipleEnvironmentImageFolderWithAdaptiveDiffusemix):
     ENVIRONMENTS = ["C", "L", "S", "V"]
 
     def __init__(self, root: str, test_envs_idxs: List[int], args: dict | None = None):
-        self.dir = os.path.join(root, "VLCS/")
+        self.dir = os.path.join(root, "VLCS_augmented/")
         num_slices = getattr(args, "num_slices", 2)
         alpha = getattr(args, "fractal_weight", 0.2)
         diffusemix = getattr(args, "diffusemix", False)
