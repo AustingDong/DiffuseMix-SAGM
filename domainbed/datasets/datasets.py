@@ -398,8 +398,23 @@ class OfficeHome_Generated(MultipleEnvironmentImageFolderWithAdaptiveDiffusemix)
         num_slices = getattr(args, "num_slices", 2)
         alpha = getattr(args, "fractal_weight", 0.2)
         diffusemix = getattr(args, "diffusemix", False)
-        manual_mix = getattr(args, "manual_mix", False)
+        manual_mix = getattr(args, "manual_mix", 1)
 
         Environments_Generated = ["Art", "Clipart", "Product", "RealWorld"]
+        test_envs = [Environments_Generated[i] for i in test_envs_idxs]
+        super().__init__(self.dir, test_envs, num_slices, alpha, diffusemix, manual_mix)
+
+class VLCS_Generated(MultipleEnvironmentImageFolderWithAdaptiveDiffusemix):
+    CHECKPOINT_FREQ = 200
+    ENVIRONMENTS = ["C", "L", "S", "V"]
+
+    def __init__(self, root: str, test_envs_idxs: List[int], args: dict | None = None):
+        self.dir = os.path.join(root, "VLCS/")
+        num_slices = getattr(args, "num_slices", 2)
+        alpha = getattr(args, "fractal_weight", 0.2)
+        diffusemix = getattr(args, "diffusemix", False)
+        manual_mix = getattr(args, "manual_mix", 1)
+
+        Environments_Generated = ["Caltech101", "LabelMe", "SUN09", "VOC2007"]
         test_envs = [Environments_Generated[i] for i in test_envs_idxs]
         super().__init__(self.dir, test_envs, num_slices, alpha, diffusemix, manual_mix)
