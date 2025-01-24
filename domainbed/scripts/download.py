@@ -177,15 +177,15 @@ def download_terra_incognita(data_dir):
 
     full_path = stage_path(data_dir, "terra_incognita")
 
-    download_and_extract(
-        "https://lilablobssc.blob.core.windows.net/caltechcameratraps/eccv_18_all_images_sm.tar.gz",
-        os.path.join(full_path, "terra_incognita_images.tar.gz"),
-    )
+    # download_and_extract(
+    #     "https://lilablobssc.blob.core.windows.net/caltechcameratraps/eccv_18_all_images_sm.tar.gz",
+    #     os.path.join(full_path, "terra_incognita_images.tar.gz"),
+    # )
 
-    download_and_extract(
-        "https://lilablobssc.blob.core.windows.net/caltechcameratraps/labels/caltech_camera_traps.json.zip",
-        os.path.join(full_path, "caltech_camera_traps.json.zip"),
-    )
+    # download_and_extract(
+    #     "https://lilablobssc.blob.core.windows.net/caltechcameratraps/labels/caltech_camera_traps.json.zip",
+    #     os.path.join(full_path, "caltech_camera_traps.json.zip"),
+    # )
 
     include_locations = ["38", "46", "100", "43"]
 
