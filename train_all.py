@@ -61,6 +61,7 @@ def main():
     parser.add_argument("--blended_loss_weight", type=float, default=0.5)
     parser.add_argument("--num_slices", type=int, default=2)
     parser.add_argument("--diffusemix", type=int, default=1)
+    parser.add_argument("--img_visualize", type=int, default=0)
     args, left_argv = parser.parse_known_args()
     args: Args = args
 

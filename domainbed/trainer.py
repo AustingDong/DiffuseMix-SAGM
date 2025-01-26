@@ -201,9 +201,10 @@ def train(test_envs: List[int], args: Args, hparams, n_steps, checkpoint_freq, l
         if step % checkpoint_freq == 0:
 
             # visualize training imgs
-            print(f"visualize step{step}")
-            img_visualize(inputs['x'], step, writer)
-            print("done")
+            if args.img_visualize:
+                print(f"visualize step{step}")
+                img_visualize(inputs['x'], step, writer)
+                print("done")
             
             results = {
                 "step": step,
