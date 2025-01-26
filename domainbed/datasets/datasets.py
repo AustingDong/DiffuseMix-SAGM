@@ -374,3 +374,17 @@ class PACS_Generated(MultipleEnvironmentImageFolderWithAdaptiveDiffusemix):
         Environments_Generated = ["art_painting", "cartoon", "photo", "sketch"]
         test_envs = [Environments_Generated[i] for i in test_envs_idxs]
         super().__init__(self.dir, test_envs, num_slices, alpha, diffusemix)
+
+class OfficeHome_Generated(MultipleEnvironmentImageFolderWithAdaptiveDiffusemix):
+    CHECKPOINT_FREQ = 200
+    ENVIRONMENTS = ["A", "C", "P", "R"]
+
+    def __init__(self, root: str, test_envs_idxs: List[int], args: dict | None = None):
+        self.dir = os.path.join(root, "office_home/")
+
+        num_slices = getattr(args, "num_slices", 2)
+        alpha = getattr(args, "fractal_weight", 0.2)
+        diffusemix = getattr(args, "diffusemix", True)
+        Environments_Generated = ["Art", "Clipart", "Product", "RealWorld"]
+        test_envs = [Environments_Generated[i] for i in test_envs_idxs]
+        super().__init__(self.dir, test_envs, num_slices, alpha, diffusemix)
